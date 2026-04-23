@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace EstebanSmolak19\CrudServiceGenerator\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class CrudServiceGeneratorCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'crud-service-generator';
 
     public $description = 'My command';
 

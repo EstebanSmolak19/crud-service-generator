@@ -1,17 +1,17 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "esteban/crud-service-generator",
+    "description": "This is my package crud-service-generator",
     "keywords": [
-        ":vendor_name",
+        "EstebanSmolak19",
         "laravel",
-        ":package_slug"
+        "crud-service-generator"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/esteban/crud-service-generator",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "EstebanSmolak19",
+            "email": "estebansmolak@gmail.com",
             "role": "Developer"
         }
     ],
@@ -35,13 +35,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "EstebanSmolak19\\CrudServiceGenerator\\": "src/",
+            "EstebanSmolak19\\CrudServiceGenerator\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "EstebanSmolak19\\CrudServiceGenerator\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,10 +63,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "EstebanSmolak19\\CrudServiceGenerator\\CrudServiceGeneratorServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "CrudServiceGenerator": "EstebanSmolak19\\CrudServiceGenerator\\Facades\\CrudServiceGenerator"
             }
         }
     },
