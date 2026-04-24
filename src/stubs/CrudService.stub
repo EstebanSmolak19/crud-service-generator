@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ model }};
+use {{ baseNamespace }};
+
+class {{ class }} extends CrudServiceBase
+{
+    /**
+     * Le constructeur par défaut
+     */
+    public function __construct()
+    {
+        // On instancie le modèle et on le passe à la classe parente
+        parent::__construct(new {{ model }}());
+    }
+}
