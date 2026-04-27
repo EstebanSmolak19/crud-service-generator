@@ -7,8 +7,9 @@ use Illuminate\Console\Command;
 
 class CrudServiceGeneratorCommand extends Command
 {
-    public $signature = 'make:service {name?} {--crud} {--h}';
-    public $description = 'Génère une classe de service avec ou sans CRUD';
+    // Ajout de l'option --controller dans la signature
+    public $signature = 'make:service {name?} {--crud} {--controller} {--h}';
+    public $description = 'Génère une classe de service avec ou sans CRUD et son contrôleur associé';
 
     public function __construct(private CommandService $service)
     {
@@ -35,17 +36,22 @@ class CrudServiceGeneratorCommand extends Command
     private function gatherState(): array
     {
         $input = $this->service->getServiceName($this);
-        $crud = $this->option('crud');
+        $controller = $this->option('controller');
+        $crud = $this->option('crud') || $controller;
         $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
 
         $idConfig = $this->service->getIdConfiguration($this, $crud);
 
+        $className = basename($input);
+        $controllerName = $className . 'Controller';
+
         return [
             'input' => $input,
-            'className' => basename($input),
+            'className' => $className,
             'namespace' => $this->service->determineNamespace($input, $configPath),
             'path' => base_path($configPath . "/{$input}.php"),
             'crud' => $crud,
+            'controller' => $controller,
             'suffix' => config($this->service->getConfigName() . '.method_suffix', 'Async'),
             'useStrict' => config($this->service->getConfigName() . '.strict_types', true),
             'idType' => $idConfig['type'],
@@ -53,6 +59,14 @@ class CrudServiceGeneratorCommand extends Command
             'model' => $crud ? $this->service->interactModelCli($this) : null,
             'baseNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\CrudServiceBase',
             'modelNamespace' => 'App\\Models',
+
+            // Données pour le Controller
+            'controllerName'      => $controllerName,
+            'controllerNamespace' => 'App\\Http\\Controllers',
+            'controllerPath'      => app_path("Http/Controllers/{$controllerName}.php"),
+            'serviceNamespace'    => $this->service->determineNamespace($input, $configPath),
+            'baseControllerNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\Controllers\\CrudControllerBase',
+            'routeName'           => strtolower($className),
         ];
     }
 }

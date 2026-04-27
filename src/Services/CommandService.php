@@ -4,22 +4,44 @@ namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class CommandService implements ICommandService
 {
     public function generate(Command $command, array $state): int
     {
-        if (!file_exists(dirname($state['path']))) {
-            mkdir(dirname($state['path']), 0755, true);
+        //Génération du Service
+        $this->generateFileFromStub(
+            $state['path'],
+            $state['crud'] ? __DIR__ . '/../stubs/CrudService.stub' : __DIR__ . '/../stubs/Service.stub',
+            $state
+        );
+        $command->info("Service {$state['className']} généré avec succès !");
+
+        //Génération du Controller (si l'option est présente)
+        if ($state['controller']) {
+            if (file_exists($state['controllerPath'])) {
+                $command->warn("Le contrôleur {$state['controllerName']} existe déjà !");
+            } else {
+                $this->generateFileFromStub(
+                    $state['controllerPath'],
+                    __DIR__ . '/../stubs/Controller.stub',
+                    $state
+                );
+                $command->info("Contrôleur {$state['controllerName']} généré avec succès !");
+
+                $slug = Str::plural($state['routeName']);
+                $command->line("<comment>Route suggérée :</comment> Route::apiResource('{$slug}', \\{$state['controllerNamespace']}\\{$state['controllerName']}::class);");
+            }
         }
 
-        $stubPath = $state['crud']
-            ? __DIR__ . '/../stubs/CrudService.stub'
-            : __DIR__ . '/../stubs/Service.stub';
+        return Command::SUCCESS;
+    }
 
-        if (!file_exists($stubPath)) {
-            $command->error("Fichier stub introuvable !");
-            return Command::FAILURE;
+    private function generateFileFromStub(string $path, string $stubPath, array $state): void
+    {
+        if (!file_exists(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
         }
 
         $content = file_get_contents($stubPath);
@@ -29,8 +51,24 @@ class CommandService implements ICommandService
         }
 
         $content = str_replace(
-            ['{{ class }}', '{{ namespace }}', '{{ idType }}', '{{ variableNameIdentifiant }}', '{{ suffix }}', '{{ baseNamespace }}', '{{ modelNamespace }}', '{{ model }}'],
             [
+                '{{ class }}',
+                '{{ className }}',
+                '{{ namespace }}',
+                '{{ idType }}',
+                '{{ variableNameIdentifiant }}',
+                '{{ suffix }}',
+                '{{ baseNamespace }}',
+                '{{ modelNamespace }}',
+                '{{ model }}',
+                '{{ controllerName }}',
+                '{{ controllerNamespace }}',
+                '{{ serviceNamespace }}',
+                '{{ baseControllerNamespace }}',
+                '{{ serviceClass }}'
+            ],
+            [
+                $state['className'],
                 $state['className'],
                 $state['namespace'],
                 $state['idType'],
@@ -38,18 +76,20 @@ class CommandService implements ICommandService
                 $state['suffix'],
                 $state['baseNamespace'],
                 $state['modelNamespace'],
-                $state['model'] ?? ''
+                $state['model'] ?? '',
+                $state['controllerName'],
+                $state['controllerNamespace'],
+                $state['serviceNamespace'],
+                $state['baseControllerNamespace'],
+                $state['className']
             ],
             $content
         );
 
-        file_put_contents($state['path'], $content);
-        $command->info("Service {$state['className']} généré avec succès !");
-
-        return Command::SUCCESS;
+        file_put_contents($path, $content);
     }
 
-    public function interactModelCli(Command $command): String
+    public function interactModelCli(Command $command): string
     {
         $model = $command->ask('Quel est le modèle associé ? (Ex. User)');
         $modelPath = app_path('Models/' . $model . '.php');
@@ -65,11 +105,11 @@ class CommandService implements ICommandService
 
     public function helpOption(Command $command): void
     {
-        $command->newLine(); // Saute une ligne
+        $command->newLine();
         $command->info(" Aide du Générateur de Service ");
         $command->line("-------------------------------");
         $command->line("Utilisez <comment>--crud</comment> pour inclure la logique de base de données.");
-        $command->line("Utilisez <comment>--sync</comment> pour désactiver le suffixe Async.");
+        $command->line("Utilisez <comment>--controller</comment> pour générer le contrôleur CRUD associé.");
         $command->newLine();
     }
 
@@ -93,10 +133,7 @@ class CommandService implements ICommandService
 
         while (!$name) {
             $name = $command->ask('Quel est le nom de votre service ? (Ex. UserService)');
-
-            if (!$name) {
-                $command->warn('Le nom du service est obligatoire');
-            }
+            if (!$name) $command->warn('Le nom du service est obligatoire');
         }
 
         return $name;
@@ -104,15 +141,9 @@ class CommandService implements ICommandService
 
     public function getIdConfiguration(Command $command, bool $isCrud): array
     {
-        if (!$isCrud) {
-            return ['type' => 'int', 'variable' => '$id'];
-        }
+        if (!$isCrud) return ['type' => 'int', 'variable' => '$id'];
 
-        $idChoice = $command->choice(
-            "Quel type d'identifiant utilisez-vous ?",
-            ['int', 'uuid'],
-            0
-        );
+        $idChoice = $command->choice("Type d'identifiant ?", ['int', 'uuid'], 0);
 
         return [
             'type'     => ($idChoice === 'uuid') ? 'string' : 'int',
