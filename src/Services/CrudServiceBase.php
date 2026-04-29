@@ -1,6 +1,6 @@
 <?php
 
-namespace EstebanSmolak19\CrudServiceGenerator;
+namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use Illuminate\Database\Eloquent\Model;
 

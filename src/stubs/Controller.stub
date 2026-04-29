@@ -1,6 +1,6 @@
 <?php
 
-namespace {{ namespace }};
+namespace {{ controllerNamespace }};
 
 use {{ serviceNamespace }}\{{ serviceClass }};
 use EstebanSmolak19\CrudServiceGenerator\Controllers\CrudControllerBase;

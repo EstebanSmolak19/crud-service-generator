@@ -3,7 +3,7 @@
 namespace {{ namespace }};
 
 use {{ modelNamespace }}\{{ model }};
-use {{ baseNamespace }};
+use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 
 class {{ class }} extends CrudServiceBase
 {

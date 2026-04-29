@@ -10,7 +10,6 @@ class CommandService implements ICommandService
 {
     public function generate(Command $command, array $state): int
     {
-        //Génération du Service
         $this->generateFileFromStub(
             $state['path'],
             $state['crud'] ? __DIR__ . '/../stubs/CrudService.stub' : __DIR__ . '/../stubs/Service.stub',
@@ -22,6 +21,7 @@ class CommandService implements ICommandService
         if ($state['controller']) {
             if (file_exists($state['controllerPath'])) {
                 $command->warn("Le contrôleur {$state['controllerName']} existe déjà !");
+
             } else {
                 $this->generateFileFromStub(
                     $state['controllerPath'],
@@ -31,6 +31,7 @@ class CommandService implements ICommandService
                 $command->info("Contrôleur {$state['controllerName']} généré avec succès !");
 
                 $slug = Str::plural($state['routeName']);
+                $this->registerRoute($command, $state);
                 $command->line("<comment>Route suggérée :</comment> Route::apiResource('{$slug}', \\{$state['controllerNamespace']}\\{$state['controllerName']}::class);");
             }
         }
@@ -65,7 +66,8 @@ class CommandService implements ICommandService
                 '{{ controllerNamespace }}',
                 '{{ serviceNamespace }}',
                 '{{ baseControllerNamespace }}',
-                '{{ serviceClass }}'
+                '{{ serviceClass }}',
+                '{{ controllerNamespace }}'
             ],
             [
                 $state['className'],
@@ -81,7 +83,8 @@ class CommandService implements ICommandService
                 $state['controllerNamespace'],
                 $state['serviceNamespace'],
                 $state['baseControllerNamespace'],
-                $state['className']
+                $state['className'],
+                $state['controllerNamespace']
             ],
             $content
         );
@@ -149,6 +152,34 @@ class CommandService implements ICommandService
             'type'     => ($idChoice === 'uuid') ? 'string' : 'int',
             'variable' => ($idChoice === 'uuid') ? '$uuid' : '$id',
         ];
+    }
+
+    private function registerRoute(Command $command, array $state): void
+    {
+        $routePath = base_path('routes/service_generator.php');
+
+        //Si le fichier n'existe pas, on le crée avec l'en-tête PHP
+        if (!file_exists($routePath)) {
+            file_put_contents($routePath, "<?php\n\nuse Illuminate\Support\Facades\Route;\n\n");
+            $command->info("Fichier de routes créé : routes/service_generator.php");
+        }
+
+        //Préparer la ligne (ex: Route::apiResource('users', UserController::class);)
+        $slug = Str::plural($state['routeName']);
+        $controllerFQN = "\\" . $state['controllerNamespace'] . "\\" . $state['controllerName'];
+
+        $routeLine = "Route::apiResource('{$slug}', {$controllerFQN}::class);\n";
+
+        //Vérifier si la route n'existe pas déjà pour éviter les doublons
+        $currentContent = file_get_contents($routePath);
+        if (str_contains($currentContent, $controllerFQN)) {
+            $command->warn("La route pour {$state['controllerName']} semble déjà exister.");
+            return;
+        }
+
+        //Ajouter la ligne à la fin du fichier
+        file_put_contents($routePath, $routeLine, FILE_APPEND);
+        $command->info("Route ajoutée avec succès !");
     }
 
     public function getConfigName(): string

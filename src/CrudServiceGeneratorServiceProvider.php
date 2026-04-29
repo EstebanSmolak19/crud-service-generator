@@ -22,4 +22,12 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
             ->hasMigration('create_crud_service_generator_table')
             ->hasCommand(CrudServiceGeneratorCommand::class);
     }
+
+    public function packageBooted()
+    {
+        $routesPath = base_path('routes/service_generator.php');
+        if(file_exists($routesPath)){
+            $this->loadRoutesFrom($routesPath);
+        }
+    }
 }
