@@ -9,6 +9,7 @@ class CrudServiceGeneratorCommand extends Command
 {
     // Ajout de l'option --controller dans la signature
     public $signature = 'make:service {name?} {--crud} {--controller} {--h}';
+
     public $description = 'Génère une classe de service avec ou sans CRUD et son contrôleur associé';
 
     public function __construct(private CommandService $service)
@@ -20,6 +21,7 @@ class CrudServiceGeneratorCommand extends Command
     {
         if ($this->option('h')) {
             $this->service->helpOption($this);
+
             return Command::SUCCESS;
         }
 
@@ -27,6 +29,7 @@ class CrudServiceGeneratorCommand extends Command
 
         if (file_exists($state['path'])) {
             $this->error("Le service {$state['className']} existe déjà !");
+
             return Command::FAILURE;
         }
 
@@ -38,22 +41,22 @@ class CrudServiceGeneratorCommand extends Command
         $input = $this->service->getServiceName($this);
         $controller = $this->option('controller');
         $crud = $this->option('crud') || $controller;
-        $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
+        $configPath = config($this->service->getConfigName().'.path', 'app/Services');
 
         $idConfig = $this->service->getIdConfiguration($this, $crud);
 
         $className = basename($input);
-        $controllerName = $className . 'Controller';
+        $controllerName = $className.'Controller';
 
         return [
             'input' => $input,
             'className' => $className,
             'namespace' => $this->service->determineNamespace($input, $configPath),
-            'path' => base_path($configPath . "/{$input}.php"),
+            'path' => base_path($configPath."/{$input}.php"),
             'crud' => $crud,
             'controller' => $controller,
-            'suffix' => config($this->service->getConfigName() . '.method_suffix', 'Async'),
-            'useStrict' => config($this->service->getConfigName() . '.strict_types', true),
+            'suffix' => config($this->service->getConfigName().'.method_suffix', 'Async'),
+            'useStrict' => config($this->service->getConfigName().'.strict_types', true),
             'idType' => $idConfig['type'],
             'variableNameIdentifiant' => $idConfig['variable'],
             'model' => $crud ? $this->service->interactModelCli($this) : null,
@@ -61,12 +64,12 @@ class CrudServiceGeneratorCommand extends Command
             'modelNamespace' => 'App\\Models',
 
             // Données pour le Controller
-            'controllerName'      => $controllerName,
+            'controllerName' => $controllerName,
             'controllerNamespace' => 'App\\Http\\Controllers',
-            'controllerPath'      => app_path("Http/Controllers/{$controllerName}.php"),
-            'serviceNamespace'    => $this->service->determineNamespace($input, $configPath),
+            'controllerPath' => app_path("Http/Controllers/{$controllerName}.php"),
+            'serviceNamespace' => $this->service->determineNamespace($input, $configPath),
             'baseControllerNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\Controllers\\CrudControllerBase',
-            'routeName'           => strtolower($className),
+            'routeName' => strtolower($className),
         ];
     }
 }

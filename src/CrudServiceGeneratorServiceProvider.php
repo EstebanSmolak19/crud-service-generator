@@ -2,9 +2,9 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator;
 
+use EstebanSmolak19\CrudServiceGenerator\Commands\CrudServiceGeneratorCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use EstebanSmolak19\CrudServiceGenerator\Commands\CrudServiceGeneratorCommand;
 
 class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
 {
@@ -26,7 +26,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
     public function packageBooted()
     {
         $routesPath = base_path('routes/service_generator.php');
-        if(file_exists($routesPath)){
+        if (file_exists($routesPath)) {
             $this->loadRoutesFrom($routesPath);
         }
     }
