@@ -3,6 +3,7 @@
 namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 abstract class CrudServiceBase
 {
@@ -17,9 +18,9 @@ abstract class CrudServiceBase
     }
 
     /**
-     * Récupère tous les éléments
+     * Récupère tous les éléments (Anciennement getAllAsync)
      */
-    public function getAllAsync()
+    public function all(): Collection
     {
         return $this->model->all();
     }
@@ -27,7 +28,7 @@ abstract class CrudServiceBase
     /**
      * Récupère un élément par son identifiant
      */
-    public function getById(mixed $id)
+    public function getById(mixed $id): Model
     {
         return $this->model->findOrFail($id);
     }
@@ -35,7 +36,7 @@ abstract class CrudServiceBase
     /**
      * Créer un élément
      */
-    public function create(array $data)
+    public function create(array $data): Model
     {
         return $this->model->create($data);
     }
@@ -43,20 +44,20 @@ abstract class CrudServiceBase
     /**
      * Met à jour un élément
      */
-    public function update(mixed $id, array $data)
+    public function update(mixed $id, array $data): Model
     {
-        $record = $this->model->findOrFail($id);
+        $record = $this->getById($id);
         $record->update($data);
 
         return $record;
     }
 
     /**
-     * Supprime un élément
+     * Supprime un élément (Renommé pour correspondre au contrôleur destroy)
      */
-    public function delete(mixed $id)
+    public function destroy(mixed $id): bool
     {
-        $record = $this->model->findOrFail($id);
+        $record = $this->getById($id);
 
         return $record->delete();
     }
