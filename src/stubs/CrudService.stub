@@ -3,6 +3,7 @@
 namespace {{ namespace }};
 
 use {{ modelNamespace }}\{{ model }};
+use App\Http\Resources\{{ resource }};
 use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 
 class {{ class }} extends CrudServiceBase
@@ -13,6 +14,6 @@ class {{ class }} extends CrudServiceBase
     public function __construct()
     {
         // On instancie le modèle et on le passe à la classe parente
-        parent::__construct(new {{ model }}());
+        parent::__construct(new {{ model }}(), {{ resource }}::class);
     }
 }

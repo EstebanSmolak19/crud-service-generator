@@ -8,13 +8,22 @@ use Illuminate\Database\Eloquent\Collection;
 abstract class CrudServiceBase
 {
     protected Model $model;
+    protected string $ressource;
 
     /**
      * Le constructeur de la classe de base
      */
-    public function __construct(Model $model)
+    public function __construct(Model $model, string $ressource)
     {
         $this->model = $model;
+        $this->ressource = $ressource;
+    }
+
+    private function responseFormat(mixed $data): mixed
+    {
+        return $data instanceof Collection
+            ? $this->ressource::collection($data)
+            : new $this->ressource($data);
     }
 
     /**
@@ -22,7 +31,7 @@ abstract class CrudServiceBase
      */
     public function all(): Collection
     {
-        return $this->model->all();
+        return $this->responseFormat($this->model->all());
     }
 
     /**
@@ -30,7 +39,7 @@ abstract class CrudServiceBase
      */
     public function find(mixed $id): Model
     {
-        return $this->model->findOrFail($id);
+        return $this->responseFormat($this->model->findOrFail($id));
     }
 
     /**
@@ -38,7 +47,8 @@ abstract class CrudServiceBase
      */
     public function create(array $data): Model
     {
-        return $this->model->create($data);
+        $record = $this->model->create($data);
+        return $this->responseFormat($record);
     }
 
     /**
@@ -49,7 +59,7 @@ abstract class CrudServiceBase
         $record = $this->find($id);
         $record->update($data);
 
-        return $record;
+        return $this->responseFormat($record);
     }
 
     /**
@@ -57,8 +67,6 @@ abstract class CrudServiceBase
      */
     public function destroy(mixed $id): bool
     {
-        $record = $this->find($id);
-
-        return $record->delete();
+        return (bool) $this->find($id)->delete();
     }
 }
