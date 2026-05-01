@@ -27,4 +27,11 @@ interface IModelService
      * @return array toutes les relations de la table.
      */
     public function getTableForeignKeys(string $table): array;
+
+    /**
+     * Récupère la clef primaire de la table
+     * @param string $table la table
+     * @return string la clef primaire
+     */
+    public function getPrimaryKey(string $table): string;
 }

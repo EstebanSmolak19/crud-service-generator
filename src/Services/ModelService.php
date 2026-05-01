@@ -51,11 +51,18 @@ class ModelService implements IModelService
             $tableName = $table['name'];
             $className = Str::studly(Str::singular($tableName));
 
+            $primaryKey = $this->getPrimaryKey($tableName);
+            $primaryKeyLine = "";
+
+            // Si la clé n'est pas "id", on génère la ligne de code pour le modèle
+            if ($primaryKey !== 'id') {
+                $primaryKeyLine = "\n    protected \$primaryKey = '{$primaryKey}';";
+            }
+
             $allColumns = $this->getTableColumns($tableName);
             $fillableColumns = array_diff($allColumns, $this->excludedColumns);
             $fillableString = "\n        '" . implode("',\n        '", $fillableColumns) . "',\n    ";
 
-            // Initialisation des imports nécessaires pour ce modèle
             $imports = [];
             $relationsContent = $this->generateAllRelations($tableName, $allTables, $imports);
 
@@ -63,13 +70,11 @@ class ModelService implements IModelService
             if (!File::exists($stubPath)) continue;
 
             $content = File::get($stubPath);
-
-            // Construction de la chaîne des "use"
             $useString = implode("\n", array_unique($imports));
 
             $content = str_replace(
-                ['{{ namespace }}', '{{ imports }}', '{{ class }}', '{{ table }}', '{{ fillable }}', '{{ relations }}'],
-                ["App\\Models", $useString, $className, $tableName, $fillableString, $relationsContent],
+                ['{{ namespace }}', '{{ imports }}', '{{ class }}', '{{ table }}', '{{ primaryKey }}', '{{ fillable }}', '{{ relations }}'],
+                ["App\\Models", $useString, $className, $tableName, $primaryKeyLine, $fillableString, $relationsContent],
                 $content
             );
 
@@ -132,5 +137,18 @@ class ModelService implements IModelService
     public function getTableForeignKeys(string $table): array
     {
         return Schema::getForeignKeys($table);
+    }
+
+    public function getPrimaryKey(string $table): string
+    {
+        $primaryKey = Schema::getIndexes($table);
+
+        foreach ($primaryKey as $index) {
+            if ($index['primary']) {
+                return $index['columns'][0];
+            }
+        }
+
+        return 'id';
     }
 }

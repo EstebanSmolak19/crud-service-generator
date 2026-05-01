@@ -28,7 +28,7 @@ abstract class CrudServiceBase
     /**
      * Récupère un élément par son identifiant
      */
-    public function getById(mixed $id): Model
+    public function find(mixed $id): Model
     {
         return $this->model->findOrFail($id);
     }
@@ -46,7 +46,7 @@ abstract class CrudServiceBase
      */
     public function update(mixed $id, array $data): Model
     {
-        $record = $this->getById($id);
+        $record = $this->find($id);
         $record->update($data);
 
         return $record;
@@ -57,7 +57,7 @@ abstract class CrudServiceBase
      */
     public function destroy(mixed $id): bool
     {
-        $record = $this->getById($id);
+        $record = $this->find($id);
 
         return $record->delete();
     }
