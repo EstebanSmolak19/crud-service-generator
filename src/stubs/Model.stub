@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Model;
+{{ imports }}
+
+class {{ class }} extends Model
+{
+    protected $table = '{{ table }}';
+
+    protected $fillable = [{{ fillable }}];
+
+    {{ relations }}
+}

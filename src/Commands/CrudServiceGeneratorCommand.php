@@ -2,7 +2,7 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Commands;
 
-use EstebanSmolak19\CrudServiceGenerator\Services\CommandService;
+use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
 use Illuminate\Console\Command;
 
 class CrudServiceGeneratorCommand extends Command
@@ -11,7 +11,7 @@ class CrudServiceGeneratorCommand extends Command
     public $signature = 'make:service {name?} {--crud} {--controller} {--h}';
     public $description = 'Génère une classe de service avec ou sans CRUD et son contrôleur associé';
 
-    public function __construct(private CommandService $service)
+    public function __construct(private ICommandService $service)
     {
         parent::__construct();
     }
