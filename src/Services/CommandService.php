@@ -28,13 +28,9 @@ class CommandService implements ICommandService
 
         if ($state['crud']) {
             $resourceName = ($state['model'] ?? $state['className']) . 'Resource';
-            $resourcePath = app_path("Http/Resources/{$resourceName}.php");
-
             $resourceState = $state;
             $resourceState['className'] = $resourceName;
             $resourceState['namespace'] = 'App\Http\Resources';
-
-            $this->generateFileFromStub($resourcePath, __DIR__ . '/../stubs/Resource.stub', $resourceState);
         }
 
         if ($state['controller']) {
@@ -95,7 +91,6 @@ class CommandService implements ICommandService
                 '{{ baseNamespace }}',
                 '{{ modelNamespace }}',
                 '{{ model }}',
-                '{{ resource }}',
                 '{{ fields }}',
                 '{{ controllerName }}',
                 '{{ controllerNamespace }}',
@@ -113,7 +108,6 @@ class CommandService implements ICommandService
                 $state['baseNamespace'],
                 $state['modelNamespace'],
                 $state['model'] ?? '',
-                ($state['model'] ?? $state['className']) . 'Resource',
                 trim($fields),
                 $state['controllerName'],
                 $state['controllerNamespace'],

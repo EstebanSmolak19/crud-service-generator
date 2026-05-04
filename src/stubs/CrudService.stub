@@ -3,17 +3,19 @@
 namespace {{ namespace }};
 
 use {{ modelNamespace }}\{{ model }};
-use App\Http\Resources\{{ resource }};
 use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
+use EstebanSmolak19\CrudServiceGenerator\Contracts\IFillableContract;
 
-class {{ class }} extends CrudServiceBase
+class {{ class }} extends CrudServiceBase implements IFillableContract
 {
+    protected array $fillable = ['']; // Les élements dans la ressource
+
     /**
      * Le constructeur par défaut
      */
     public function __construct()
     {
         // On instancie le modèle et on le passe à la classe parente
-        parent::__construct(new {{ model }}(), {{ resource }}::class);
+        parent::__construct(new {{ model }}());
     }
 }
