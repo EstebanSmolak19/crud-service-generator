@@ -8,7 +8,7 @@ use EstebanSmolak19\CrudServiceGenerator\Contracts\IFillableContract;
 
 class {{ class }} extends CrudServiceBase implements IFillableContract
 {
-    protected array $fillable = ['']; // Les élements dans la ressource (par défaut null)
+    protected array $fillable = []; // Les élements dans la ressource (par défaut null)
 
     /**
      * Le constructeur par défaut
