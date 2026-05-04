@@ -80,9 +80,4 @@ abstract class CrudServiceBase
     {
         return $this->fillable;
     }
-
-    public function getResource(): string
-    {
-        return $this->ressource;
-    }
 }
