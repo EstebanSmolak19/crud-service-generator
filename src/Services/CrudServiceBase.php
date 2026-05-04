@@ -25,11 +25,11 @@ abstract class CrudServiceBase
     {
         if ($data instanceof EloquentCollection || $data instanceof SupportCollection) {
             return $data->map(function($item) {
-                return new $this->ressource($item, $this->fillable);
+                return new $this->ressource($item, $this->getResourceFields());
             });
         }
 
-        return new $this->ressource($data, $this->fillable);
+        return new $this->ressource($data, $this->getResourceFields());
     }
 
     /**
