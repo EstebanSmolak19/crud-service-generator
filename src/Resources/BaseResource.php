@@ -24,6 +24,11 @@ class BaseResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = [];
+
+        if($this->fillable === ['']) {
+            return parent::toArray($request);
+        }
+
         // Si aucun champ n'est défini, on peut retourner tous les attributs du modèle
         $columns = !empty($this->fillable) ? $this->fillable : array_keys($this->resource->getAttributes());
 

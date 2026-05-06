@@ -8,41 +8,53 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SupportCollection;
+use LogicException;
+use ReflectionClass;
 
 abstract class CrudServiceBase
 {
     protected Model $model;
     protected string $ressource = BaseResource::class;
-    protected array $fillable = []; // Overide dans l'enfant.
+    protected array $fillable;
+    protected int $perPage;
 
-    /**
-     * Le constructeur de la classe de base
-     */
+    protected array $orderBy = ['created_at' => 'DESC'];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
+        $reflection = new ReflectionClass($this);
+        if ($reflection->getProperty('fillable')->getDeclaringClass()->getName() === self::class) {
+            throw new LogicException(
+                sprintf("Tu as oublié de déclarer 'protected array \$fillable = [];' dans %s.
+                Mets un tableau vide pour tout afficher par défaut.", static::class)
+            );
+        }
+    }
+
+    public function applySorting(Builder $query): Builder
+    {
+        foreach ($this->orderBy as $column => $direction) {
+            // On s'assure que la direction est valide (ASC ou DESC)
+            $dir = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
+            $query->orderBy($column, $dir);
+        }
+        return $query;
     }
 
     public function responseFormat(mixed $data): mixed
     {
-        // Le Builder
         if ($data instanceof Builder) {
-            // On va chercher dans l'URL si ?'per_page' = existe
-            $perPage = request()->query(config('crud-service-generator.pagination.param_name', 'per_page'));
-            $default = config('crud-service-generator.pagination.default_per_page', 5);
-            $finalPerPage = $perPage ?: $default;
+            $finalPerPage = $this->getPerPage();
 
-            if ($finalPerPage) {
+            if ($finalPerPage > 0) {
                 $max = config('crud-service-generator.pagination.max_per_page', 100);
-                // On transforme le Builder en Paginator
                 $data = $data->paginate(min((int)$finalPerPage, $max));
             } else {
-                // Sinon on transforme le Builder en Collection simple
                 $data = $data->get();
             }
         }
 
-        // CAS 1 : Gestion de la Pagination (Si c'est devenu un Paginator)
         if ($data instanceof LengthAwarePaginator) {
             return $data->setCollection(
                 $data->getCollection()->map(function($item) {
@@ -51,44 +63,30 @@ abstract class CrudServiceBase
             );
         }
 
-        // CAS 2 : Collections classiques
         if ($data instanceof EloquentCollection || $data instanceof SupportCollection) {
             return $data->map(function($item) {
                 return new $this->ressource($item, $this->getResourceFields());
             });
         }
 
-        // CAS 3 : Objet unique
         return new $this->ressource($data, $this->getResourceFields());
     }
 
-    /**
-     * Récupère tous les éléments
-     */
     public function all(): mixed
     {
         return $this->model->query();
     }
 
-    /**
-     * Récupère un élément par son identifiant
-     */
     public function find(mixed $id): mixed
     {
         return $this->model->findOrFail($id);
     }
 
-    /**
-     * Créer un élément
-     */
     public function create(array $data): mixed
     {
         return $this->model->create($data);
     }
 
-    /**
-     * Met à jour un élément
-     */
     public function update(mixed $id, array $data): mixed
     {
         $record = $this->model->findOrFail($id);
@@ -97,16 +95,33 @@ abstract class CrudServiceBase
         return $record;
     }
 
-    /**
-     * Supprime un élément (Renommé pour correspondre au contrôleur destroy)
-     */
     public function destroy(mixed $id): bool
     {
-        return (bool) $this->find($id)->delete();
+        return (bool) $this->model->findOrFail($id)->delete();
     }
 
     public function getResourceFields(): array
     {
         return $this->fillable;
+    }
+
+    public function getRessource(): string
+    {
+        return $this->ressource;
+    }
+
+    public function getPerPage(): int
+    {
+        $queryParam = request()->query(config('crud-service-generator.pagination.param_name', 'per_page'));
+
+        if ($queryParam) {
+            return (int) $queryParam;
+        }
+
+        if (isset($this->perPage)) {
+            return $this->perPage;
+        }
+
+        return (int) config('crud-service-generator.pagination.default_per_page', 15);
     }
 }
