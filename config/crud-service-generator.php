@@ -2,19 +2,68 @@
 
 return [
 
-    // Chemain par défaut de la création d'un service
-    'path' => 'app/Services',
-    'stict_types' => true,
+    /*
+    |--------------------------------------------------------------------------
+    | Service Path
+    |--------------------------------------------------------------------------
+    |
+    | Ce chemin définit l'endroit où vos services seront générés par défaut.
+    | Vous pouvez modifier cette valeur pour l'adapter à l'architecture
+    | de votre application, par exemple 'app/Domain/Services'.
+    |
+    */
+
+    'path' => 'app/Services', // A faire
+
+    /*
+    |--------------------------------------------------------------------------
+    | Strict Types
+    |--------------------------------------------------------------------------
+    |
+    | Si cette option est activée, le générateur ajoutera 'declare(strict_types=1);'
+    | au début de chaque fichier PHP généré. C'est une excellente pratique
+    | pour garantir la robustesse de votre code.
+    |
+    */
+
+    'strict_types' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Ici, vous pouvez configurer le comportement du générateur vis-à-vis
+    | de vos modèles Eloquent. La whitelist permet de limiter la génération
+    | à certaines tables spécifiques.
+    |
+    */
 
     'models' => [
-         // Les tables à exclure.
-        'whitelist' => [
-            ''
-        ],
+        // Tables à inclure spécifiquement (laisse vide pour tout inclure)
+        'whitelist' => [],
 
-        // Champs des tables à exclure
+        // Colonnes à ignorer systématiquement lors de la génération
         'excluded_columns' => [
-            ''
+            'id', 'password', 'remember_token', 'created_at', 'updated_at', 'deleted_at'
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination Settings
+    |--------------------------------------------------------------------------
+    |
+    | Ces options contrôlent le système de pagination automatique de vos services.
+    | 'default' définit le nombre d'items par page si rien n'est précisé,
+    | tandis que 'max' empêche de surcharger le serveur via l'URL.
+    |
+    */
+
+    'pagination' => [
+        'default_per_page' => 5,
+        'max_per_page' => 100,
+        'param_name' => 'per_page',
+    ],
+
 ];

@@ -5,6 +5,8 @@ namespace EstebanSmolak19\CrudServiceGenerator\Services;
 use EstebanSmolak19\CrudServiceGenerator\Resources\BaseResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SupportCollection;
 
 abstract class CrudServiceBase
@@ -21,14 +23,42 @@ abstract class CrudServiceBase
         $this->model = $model;
     }
 
-    private function responseFormat(mixed $data): mixed
+    public function responseFormat(mixed $data): mixed
     {
+        // Le Builder
+        if ($data instanceof Builder) {
+            // On va chercher dans l'URL si ?'per_page' = existe
+            $perPage = request()->query(config('crud-service-generator.pagination.param_name', 'per_page'));
+            $default = config('crud-service-generator.pagination.default_per_page', 5);
+            $finalPerPage = $perPage ?: $default;
+
+            if ($finalPerPage) {
+                $max = config('crud-service-generator.pagination.max_per_page', 100);
+                // On transforme le Builder en Paginator
+                $data = $data->paginate(min((int)$finalPerPage, $max));
+            } else {
+                // Sinon on transforme le Builder en Collection simple
+                $data = $data->get();
+            }
+        }
+
+        // CAS 1 : Gestion de la Pagination (Si c'est devenu un Paginator)
+        if ($data instanceof LengthAwarePaginator) {
+            return $data->setCollection(
+                $data->getCollection()->map(function($item) {
+                    return new $this->ressource($item, $this->getResourceFields());
+                })
+            );
+        }
+
+        // CAS 2 : Collections classiques
         if ($data instanceof EloquentCollection || $data instanceof SupportCollection) {
             return $data->map(function($item) {
                 return new $this->ressource($item, $this->getResourceFields());
             });
         }
 
+        // CAS 3 : Objet unique
         return new $this->ressource($data, $this->getResourceFields());
     }
 
@@ -37,7 +67,7 @@ abstract class CrudServiceBase
      */
     public function all(): mixed
     {
-        return $this->responseFormat($this->model->all());
+        return $this->model->query();
     }
 
     /**
@@ -45,7 +75,7 @@ abstract class CrudServiceBase
      */
     public function find(mixed $id): mixed
     {
-        return $this->responseFormat($this->model->findOrFail($id));
+        return $this->model->findOrFail($id);
     }
 
     /**
@@ -53,8 +83,7 @@ abstract class CrudServiceBase
      */
     public function create(array $data): mixed
     {
-        $record = $this->model->create($data);
-        return $this->responseFormat($record);
+        return $this->model->create($data);
     }
 
     /**
@@ -62,10 +91,10 @@ abstract class CrudServiceBase
      */
     public function update(mixed $id, array $data): mixed
     {
-        $record = $this->find($id);
+        $record = $this->model->findOrFail($id);
         $record->update($data);
 
-        return $this->responseFormat($record);
+        return $record;
     }
 
     /**

@@ -2,16 +2,29 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Controllers;
 
+use EstebanSmolak19\CrudServiceGenerator\Services\ServiceProxy;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class CrudControllerBase extends Controller
 {
-    protected $service;
+    protected $realService;
 
     public function __construct($service)
     {
-        $this->service = $service;
+        $this->realService = $service;
+    }
+
+    /**
+     * On intercepte le $this->service qui n'existe pas
+     * On l'injecte dans $this->realService
+     * On appel le proxy
+     */
+    public function __get($name)
+    {
+        if($name === 'service') {
+            return new ServiceProxy($this->realService);
+        }
     }
 
     public function index()
@@ -25,20 +38,20 @@ class CrudControllerBase extends Controller
         return response()->json($data, 201);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         return response()->json($this->service->find($id));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $data = $this->service->update($id, $request->all());
         return response()->json($data);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
-        $this->service->delete($id);
+        $this->service->destroy($id);
         return response()->json(null, 204);
     }
 }
