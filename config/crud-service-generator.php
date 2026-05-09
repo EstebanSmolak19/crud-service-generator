@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'path' => 'app/Services', // A faire
+    'path' => 'app/Services',
 
     /*
     |--------------------------------------------------------------------------
@@ -40,10 +40,14 @@ return [
     */
 
     'models' => [
-        // Tables à inclure spécifiquement (laisse vide pour tout inclure)
-        'whitelist' => [],
+        // Tables à exclure (laisse vide pour tout inclure)
+        'whitelist' => [
+            'cache', 'cache_locks', 'failed_jobs',
+            'job_batches', 'jobs', 'migrations',
+            'password_reset_tokens', 'sessions'
+        ],
 
-        // Colonnes à ignorer systématiquement lors de la génération
+        // Colonnes à ignorer systématiquement lors de la génération des models
         'excluded_columns' => [
             'id', 'password', 'remember_token', 'created_at', 'updated_at', 'deleted_at'
         ],

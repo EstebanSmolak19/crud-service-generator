@@ -10,20 +10,11 @@ use Illuminate\Support\Facades\File;
 class ModelService implements IModelService
 {
     public array $whitelist {
-        get {
-            $basic = [
-                'cache', 'cache_locks', 'crud_service_generator_table', 'failed_jobs',
-                'job_batches', 'jobs', 'migrations', 'password_reset_tokens', 'sessions'
-            ];
-            return array_merge($basic, config('crud-service-generator.models.whitelist', []));
-        }
+        get { return array_merge(config('crud-service-generator.models.whitelist', [])); }
     }
 
     public array $excludedColumns {
-        get {
-            $basic = ['id', 'created_at', 'updated_at', 'deleted_at'];
-            return array_merge($basic, config('crud-service-generator.models.excluded_columns', []));
-        }
+        get { return array_merge(config('crud-service-generator.models.excluded_columns', [])); }
     }
 
     public function searchTable(): array
