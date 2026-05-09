@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 use ReflectionClass;
 
@@ -17,6 +19,9 @@ abstract class CrudServiceBase
     protected string $ressource = BaseResource::class;
     protected array $fillable;
     protected int $perPage;
+
+    // Enregistrement en BDD dans la table de log sur le CRUD.
+    protected bool $audit = false;
 
     protected array $orderBy = ['created_at' => 'DESC'];
 
@@ -30,6 +35,23 @@ abstract class CrudServiceBase
                 Mets un tableau vide pour tout afficher par défaut.", static::class)
             );
         }
+    }
+
+    public function writeLog(string $event, $model, ?array $old = null, ?array $new = null): void
+    {
+        if(!$this->audit) return;
+        $tableName = config('crud-service-generator.database.table_name_log');
+        DB::table($tableName)->insert([
+            'user_id' => Auth::id(),
+            'event'   => $event,
+            'auditable_type' => get_class($model),
+            'auditable_id'   => $model->id,
+            'old_values'     => $old ? json_encode($old) : null,
+            'new_values'     => $new ? json_encode($new) : null,
+            'ip_address'     => request()->ip(),
+            'created_at'     => now(),
+            'updated_at'     => now(),
+        ]);
     }
 
     public function applySorting(Builder $query): Builder
@@ -84,20 +106,42 @@ abstract class CrudServiceBase
 
     public function create(array $data): mixed
     {
-        return $this->model->create($data);
+       $record = $this->model->create($data);
+        if ($this->audit) {
+            // On log l'événement 'create' avec les données de l'objet créé
+            $this->writeLog('create', $record, null, $record->toArray());
+        }
+        return $record;
     }
 
-    public function update(mixed $id, array $data): mixed
+    public function update(mixed $id, array $data)
     {
         $record = $this->model->findOrFail($id);
+        $oldValues = $this->audit ? $record->getRawOriginal() : null;
         $record->update($data);
+
+        // On regarde ce qui a changé APRES
+        if ($this->audit) {
+            $newValues = $record->getChanges();
+            // On ne log que si il y a vraiment eu un changement
+            if (!empty($newValues)) {
+                // On ne garde dans le 'old' que ce qui a bougé
+                $relevantOld = array_intersect_key($oldValues, $newValues);
+                $this->writeLog('update', $record, $relevantOld, $newValues);
+            }
+        }
 
         return $record;
     }
 
     public function destroy(mixed $id): bool
     {
-        return (bool) $this->model->findOrFail($id)->delete();
+        $record = $this->model->findOrFail($id);
+        if ($this->audit) {
+            // Avant de supprimer, on sauvegarde l'état final dans 'old_values'
+            $this->writeLog('delete', $record, $record->toArray(), null);
+        }
+        return $record->delete();
     }
 
     public function getResourceFields(): array

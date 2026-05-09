@@ -65,9 +65,21 @@ return [
     */
 
     'pagination' => [
-        'default_per_page' => 5,
-        'max_per_page' => 100,
-        'param_name' => 'per_page',
+        'default_per_page' => env('CRUD_DEFAULT_PAGINATION', 5),
+        'max_per_page' => env('CRUD_DEFAULT_MAX_PAGINATION', 100),
+        'param_name' => env('CRUD_QUERY_NAME', 'per_page'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database Table Name
+    |--------------------------------------------------------------------------
+    |
+    | Nom de la table utilisée pour stocker les logs d'audit.
+    | Par défaut : 'crud_service_logs'.
+    |
+    */
+    'database' => [
+        'table_name_log' => 'crud_service_logs',
+    ],
 ];
