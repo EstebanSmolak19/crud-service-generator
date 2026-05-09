@@ -49,18 +49,20 @@ interface ICommandService
     public function getServiceName(Command $command): string;
 
     /**
-     * Détermine s'il s'agit d'un Id de type Int (id) ou de type string (uuid)
-     *
-     * @param Command $command
-     * @param bool $isCrud
-     * @return array
-     */
-    public function getIdConfiguration(Command $command, bool $isCrud): array;
-
-    /**
      * Récupère le nom de la configuration du package
      *
      * @return string
      */
     public function getConfigName(): string;
+
+    /**
+     * Retourne le nom du controller que l'on souhaite.
+     * @return string Le nom du controller
+     */
+    public function getControllerName(Command $command): string;
+
+    /**
+     * Retourne le nom de la route CRUD.
+     */
+    public function getRouteName(Command $command): string;
 }

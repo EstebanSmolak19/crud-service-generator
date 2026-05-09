@@ -85,8 +85,6 @@ class CommandService implements ICommandService
                 '{{ class }}',
                 '{{ className }}',
                 '{{ namespace }}',
-                '{{ idType }}',
-                '{{ variableNameIdentifiant }}',
                 '{{ suffix }}',
                 '{{ baseNamespace }}',
                 '{{ modelNamespace }}',
@@ -102,8 +100,6 @@ class CommandService implements ICommandService
                 $state['className'],
                 $state['className'],
                 $state['namespace'],
-                $state['idType'],
-                $state['variableNameIdentifiant'],
                 $state['suffix'],
                 $state['baseNamespace'],
                 $state['modelNamespace'],
@@ -174,14 +170,24 @@ class CommandService implements ICommandService
         return $name;
     }
 
-    public function getIdConfiguration(Command $command, bool $isCrud): array
+    public function getControllerName(Command $command): string
     {
-        if (!$isCrud) return ['type' => 'int', 'variable' => '$id'];
-        $idChoice = $command->choice("Type d'identifiant ?", ['int', 'uuid'], 0);
-        return [
-            'type'     => ($idChoice === 'uuid') ? 'string' : 'int',
-            'variable' => ($idChoice === 'uuid') ? '$uuid' : '$id',
-        ];
+        do {
+            $name = $command->ask('Quel est le nom de votre controller ? (Ex. UserController)');
+            if(!$name) $command->warn('Le nom du controller est obligatoire');
+        } while(!$name);
+
+        return $name;
+    }
+
+    public function getRouteName(Command $command): string
+    {
+        do {
+            $routeName = $command->ask('Quel est le nom de la route associé au controller ? (Ex. users)');
+            if(!$routeName) $command->warn('Le nom de la route est obligatoire');
+        } while(!$routeName);
+
+        return $routeName;
     }
 
     private function registerRoute(Command $command, array $state): void
