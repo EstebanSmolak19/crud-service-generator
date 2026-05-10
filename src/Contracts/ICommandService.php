@@ -24,14 +24,6 @@ interface ICommandService
     public function interactModelCli(Command $command): string;
 
     /**
-     * Affiche les informations d'aide personnalisées
-     *
-     * @param Command $command
-     * @return void
-     */
-    public function helpOption(Command $command): void;
-
-    /**
      * Détermine le Namespace du fichier généré
      *
      * @param string $input

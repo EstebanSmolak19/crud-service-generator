@@ -7,6 +7,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use EstebanSmolak19\CrudServiceGenerator\Commands\CrudServiceGeneratorCommand;
 use EstebanSmolak19\CrudServiceGenerator\Commands\GenerateModel;
+use EstebanSmolak19\CrudServiceGenerator\Commands\HelpCommand;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\IModelService;
 use EstebanSmolak19\CrudServiceGenerator\Services\CommandService;
@@ -23,7 +24,8 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
             ->hasCommands([
                     CrudServiceGeneratorCommand::class,
                     GenerateModel::class,
-                    ApplyConfigCommand::class
+                    ApplyConfigCommand::class,
+                    HelpCommand::class
                 ]);
     }
 

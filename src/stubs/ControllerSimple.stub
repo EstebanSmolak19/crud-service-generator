@@ -1,0 +1,14 @@
+<?php
+
+namespace {{ controllerNamespace }};
+
+use App\Http\Controllers\Controller;
+use {{ serviceNamespace }}\{{ serviceClass }};
+use Illuminate\Http\Request;
+
+class {{ controllerName }} extends Controller
+{
+    public function __construct(private {{ serviceClass }} $service)
+    {
+    }
+}

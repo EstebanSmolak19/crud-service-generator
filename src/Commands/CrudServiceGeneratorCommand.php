@@ -7,9 +7,13 @@ use Illuminate\Console\Command;
 
 class CrudServiceGeneratorCommand extends Command
 {
-    // Ajout de l'option --controller dans la signature
-    public $signature = 'make:service {name?} {--crud} {--controller} {--h}';
-    public $description = 'Génère une classe de service avec ou sans CRUD et son contrôleur associé';
+    public $signature = 'make:service
+        {name? : Le nom du service (ex: UserService)}
+        {--crud : Génère un service avec méthodes CRUD}
+        {--controller : Génère un contrôleur API simple}
+        {--all : Génère la totale (Service CRUD + Controller + Route + Resource)}';
+
+    public $description = 'Génère une classe de service et ses composants associés';
 
     public function __construct(private ICommandService $service)
     {
@@ -18,15 +22,17 @@ class CrudServiceGeneratorCommand extends Command
 
     public function handle(): int
     {
-        if ($this->option('h')) {
-            $this->service->helpOption($this);
-            return Command::SUCCESS;
+        $optionsCount = ($this->option('crud') ? 1 : 0) + ($this->option('controller') ? 1 : 0) + ($this->option('all') ? 1 : 0);
+
+        if ($optionsCount > 1) {
+            $this->error("Veuillez choisir une seule option parmi --crud, --controller ou --all.");
+            return Command::FAILURE;
         }
 
         $state = $this->gatherState();
 
-        if (file_exists($state['path'])) {
-            $this->error("Le service {$state['className']} existe déjà !");
+        if ($state['controller'] && file_exists($state['controllerPath'])) {
+            $this->error("Le contrôleur {$state['controllerName']} existe déjà !");
             return Command::FAILURE;
         }
 
@@ -36,19 +42,21 @@ class CrudServiceGeneratorCommand extends Command
     private function gatherState(): array
     {
         $input = $this->service->getServiceName($this);
-        $controller = $this->option('controller');
-        $crud = $this->option('crud') || $controller;
-        $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
 
+        $isAll = $this->option('all');
+        $isControllerOnly = $this->option('controller');
+        $isCrudOnly = $this->option('crud');
+
+        $controller = $isAll || $isControllerOnly;
+        $crud = $isAll || $isCrudOnly;
+
+        $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
         $className = basename($input);
 
-        $controllerName = $controller
-            ? $this->service->getControllerName($this)
-            : '';
+        $controllerName = $controller ? $this->service->getControllerName($this) : '';
 
-        $routeName = $controller
-            ? $this->service->getRouteName($this)
-            : '';
+        // On ne demande le nom de la route QUE si on est en mode --all
+        $routeName = $isAll ? $this->service->getRouteName($this) : '';
 
         return [
             'input' => $input,
@@ -57,13 +65,13 @@ class CrudServiceGeneratorCommand extends Command
             'path' => base_path($configPath . "/{$input}.php"),
             'crud' => $crud,
             'controller' => $controller,
+            'all_mode' => $isAll, // L'élément manquant qui causait l'erreur
             'suffix' => config($this->service->getConfigName() . '.method_suffix', 'Async'),
             'useStrict' => config($this->service->getConfigName() . '.strict_types', true),
             'model' => $crud ? $this->service->interactModelCli($this) : null,
             'baseNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\CrudServiceBase',
             'modelNamespace' => 'App\\Models',
 
-            // Données pour le Controller
             'controllerName'      => $controllerName,
             'controllerNamespace' => 'App\\Http\\Controllers',
             'controllerPath'      => app_path("Http/Controllers/{$controllerName}.php"),
