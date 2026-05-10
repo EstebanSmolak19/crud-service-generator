@@ -44,14 +44,14 @@ class CommandService implements ICommandService
 
     public function generate(Command $command, array $state): int
     {
-        // 1. Service
+        //Service
         $this->generateFileFromStub(
             $state['path'],
             $state['crud'] ? __DIR__ . '/../stubs/CrudService.stub' : __DIR__ . '/../stubs/Service.stub',
             $state
         );
 
-        // 2. Controller
+        //Controller
         if ($state['controller']) {
             // Sélection du stub : Controller.stub pour --all, ControllerSimple.stub pour --controller
             $controllerStub = ($state['all_mode'] ?? false)
@@ -60,7 +60,7 @@ class CommandService implements ICommandService
 
             $this->generateFileFromStub($state['controllerPath'], $controllerStub, $state);
 
-            // Routes : UNIQUEMENT si --all est utilisé
+            // Routes : uniquement si --all est utilisé
             if ($state['all_mode'] ?? false) {
                 $this->registerRoute($command, $state);
             }
@@ -131,7 +131,7 @@ class CommandService implements ICommandService
         $modelPath = app_path('Models/' . $model . '.php');
         if (!file_exists($modelPath)) {
             $command->info("Le modèle {$model} n'existe pas, création en cours...");
-            $command->call('make:model', ['name' => $model]);
+            $command->callSilent('make:model', ['name' => $model,]);
         }
 
         return $model;
