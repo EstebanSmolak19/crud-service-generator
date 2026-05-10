@@ -2,6 +2,7 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator;
 
+use EstebanSmolak19\CrudServiceGenerator\Commands\ApplyConfigCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use EstebanSmolak19\CrudServiceGenerator\Commands\CrudServiceGeneratorCommand;
@@ -21,7 +22,8 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasCommands([
                     CrudServiceGeneratorCommand::class,
-                    GenerateModel::class
+                    GenerateModel::class,
+                    ApplyConfigCommand::class
                 ]);
     }
 

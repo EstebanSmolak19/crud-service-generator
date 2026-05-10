@@ -43,34 +43,44 @@ class ModelService implements IModelService
         }
     }
 
-    /**
-     * Masque le dossier Base dans VS Code pour ne pas polluer l'explorateur
-     */
-    private function hideBaseModelsInVsCode(): void
+    public function hideBaseModelsInVsCode(): void
     {
-        $vscodePath = base_path('.vscode');
-        $settingsPath = "{$vscodePath}/settings.json";
+        $settingsPath = base_path('.vscode/settings.json');
+        $configValue = config('crud-service-generator.models.hide_base_models_in_vscode', true);
 
-        //Créer le dossier .vscode s'il n'existe pas
-        if (!File::isDirectory($vscodePath)) {
-            File::makeDirectory($vscodePath, 0777, true);
+        if (!File::exists($settingsPath)) {
+            // Si le fichier n'existe pas et qu'on veut masquer, on le crée.
+            if (!$configValue) return;
+            File::makeDirectory(base_path('.vscode'), 0777, true, true);
+            $settings = [];
+        } else {
+            $settings = json_decode(File::get($settingsPath), true);
+            if (json_last_error() !== JSON_ERROR_NONE) return;
         }
 
-        //Lire le contenu actuel s'il existe
-        $settings = [];
-        if (File::exists($settingsPath)) {
-            $settings = json_decode(File::get($settingsPath), true) ?? [];
+        if ($configValue) {
+            //TRUE -> On ajoute/maintient l'exclusion
+            $settings['files.exclude']['app/Models/Base'] = true;
+        } else {
+            //FALSE -> On retire l'exclusion si elle existe
+            if (isset($settings['files.exclude']['app/Models/Base'])) {
+                unset($settings['files.exclude']['app/Models/Base']);
+            }
+
+            //Si 'files.exclude' est devenu vide, on peut supprimer la clé parente pour faire propre
+            if (isset($settings['files.exclude']) && empty($settings['files.exclude'])) {
+                unset($settings['files.exclude']);
+            }
         }
 
-        // Ajouter l'exclusion du dossier Base
-        // On utilise la clé "files.exclude" native de VS Code
-        $settings['files.exclude']['app/Models/Base'] = true;
-
-        //Sauvegarder proprement
-        File::put(
-            $settingsPath,
-            json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        );
+        // On enregistre uniquement si le tableau n'est pas vide,
+        // ou si le fichier existait déjà pour ne pas laisser de fichiers fantômes
+        if (!empty($settings) || File::exists($settingsPath)) {
+            File::put(
+                $settingsPath,
+                json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            );
+        }
     }
 
     /**
