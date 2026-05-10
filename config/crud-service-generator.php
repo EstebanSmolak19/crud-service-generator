@@ -44,13 +44,17 @@ return [
         'whitelist' => [
             'cache', 'cache_locks', 'failed_jobs',
             'job_batches', 'jobs', 'migrations',
-            'password_reset_tokens', 'sessions'
+            'password_reset_tokens', 'sessions',
+            config('crud-service-generator.database.table_name_log')
         ],
 
         // Colonnes à ignorer systématiquement lors de la génération des models
         'excluded_columns' => [
             'id', 'password', 'remember_token', 'created_at', 'updated_at', 'deleted_at'
         ],
+
+        // Permet de cacher le dossier 'app/Models/Base' dans l'éditeur VSCode.
+        'hide_base_models_in_vscode' => true,
     ],
 
     /*
