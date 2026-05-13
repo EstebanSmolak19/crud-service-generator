@@ -1,0 +1,23 @@
+<?php
+
+namespace {{ namespace }};
+
+use Attribute;
+use EstebanSmolak19\CrudServiceGenerator\Contracts\ServiceAttributeContract;
+
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+class {{ class }} implements ServiceAttributeContract
+{
+    public function __construct()
+    {
+        
+    }
+
+    /**
+     * Logique métier de l'attribut
+     */
+    public function handle(object $service, string $method, array &$params): void
+    {
+        // Exemple : if (!auth()->check()) abort(403);
+    }
+}

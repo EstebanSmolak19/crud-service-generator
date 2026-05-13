@@ -239,4 +239,14 @@ abstract class CrudServiceBase
 
         return (int) config('crud-service-generator.pagination.default_per_page', 15);
     }
+
+    /**
+     * Gère les permissions des services CRUD (all, find, create, update, destroy)
+     * Par défaut, tous est en public.
+     * @return array
+     */
+    public function permissions(): array
+    {
+        return [];
+    }
 }
