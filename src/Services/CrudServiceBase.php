@@ -2,28 +2,24 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
-use EstebanSmolak19\CrudServiceGenerator\Resources\BaseResource;
+use EstebanSmolak19\CrudServiceGenerator\Contracts\HasSqlOverrides;
+use EstebanSmolak19\CrudServiceGenerator\Traits\HasCrudConfiguration;
+use EstebanSmolak19\CrudServiceGenerator\Traits\InteractsWithSql;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Traits\Macroable;
 use LogicException;
 use ReflectionClass;
 
 abstract class CrudServiceBase
 {
-    protected Model $model;
-    protected string $ressource = BaseResource::class;
-    protected array $fillable;
-    protected int $perPage;
-
-    // Enregistrement en BDD dans la table de log sur le CRUD.
-    protected bool $audit = false;
-
-    protected array $orderBy = ['created_at' => 'DESC'];
+    use Macroable, HasCrudConfiguration, InteractsWithSql;
 
     public function __construct(Model $model)
     {
@@ -54,7 +50,7 @@ abstract class CrudServiceBase
         ]);
     }
 
-    public function applySorting(Builder $query): Builder
+    public function applySorting(Builder|QueryBuilder $query): Builder|QueryBuilder
     {
         foreach ($this->orderBy as $column => $direction) {
             // On s'assure que la direction est valide (ASC ou DESC)
@@ -66,7 +62,8 @@ abstract class CrudServiceBase
 
     public function responseFormat(mixed $data): mixed
     {
-        if ($data instanceof Builder) {
+        // On gère les deux types de Builder (Vue SQL QueryBuilder ou Modèle Eloquent Builder)
+        if ($data instanceof Builder || $data instanceof QueryBuilder) {
             $finalPerPage = $this->getPerPage();
 
             if ($finalPerPage > 0) {
@@ -80,33 +77,69 @@ abstract class CrudServiceBase
         if ($data instanceof LengthAwarePaginator) {
             return $data->setCollection(
                 $data->getCollection()->map(function($item) {
-                    return new $this->ressource($item, $this->getResourceFields());
+                    return $this->mapToResource($item);
                 })
             );
         }
 
         if ($data instanceof EloquentCollection || $data instanceof SupportCollection) {
             return $data->map(function($item) {
-                return new $this->ressource($item, $this->getResourceFields());
+                return $this->mapToResource($item);
             });
         }
 
-        return new $this->ressource($data, $this->getResourceFields());
+        return $this->mapToResource($data);
     }
 
     public function all(): mixed
     {
+        if($this instanceof HasSqlOverrides && $view = $this->getSqlViewName()) {
+            if($this->viewExists($view)) {
+                // On renvoie le QueryBuilder pour permettre la pagination
+                return DB::table($view);
+            }
+        }
         return $this->model->query();
     }
 
     public function find(mixed $id): mixed
     {
+        if($this instanceof HasSqlOverrides && $view = $this->getSqlViewName()) {
+            if($this->viewExists($view)) {
+
+                // Si la colonne $this->primary_key n'existe pas dans la vue SQL.
+                if(!$this->columnExists($view, $this->primaryKey)) {
+                    throw new LogicException(
+                        sprintf(
+                            "Structure SQL invalide : La vue '%s' doit contenir la colonne '%s' pour permettre la récupération par ID.
+                            Vérifiez la définition de votre vue ou modifiez \$primaryKey dans votre service.",
+                            $view,
+                            $this->primaryKey
+                        )
+                    );
+                }
+
+                $record = DB::table($view)->where($this->primaryKey, $id)->first();
+                if(!$record) abort(404, "Enregistrement introuvable dans la vue.");
+
+                return $this->mapToResource($record);
+            }
+        }
         return $this->model->findOrFail($id);
     }
 
     public function create(array $data): mixed
     {
-       $record = $this->model->create($data);
+        //On vérifie si on doit utiliser une procédure SQL
+        if ($this instanceof HasSqlOverrides && $procedure = $this->getCreateProcedureName()) {
+            if ($this->procedureExists($procedure)) {
+                return $this->executeCreateProcedure($procedure, $data);
+            }
+        }
+
+        //Sinon, on reste sur le comportement Eloquent classique
+        $record = $this->model->create($data);
+
         if ($this->audit) {
             // On log l'événement 'create' avec les données de l'objet créé
             $this->writeLog('create', $record, null, $record->toArray());
@@ -116,16 +149,28 @@ abstract class CrudServiceBase
 
     public function update(mixed $id, array $data)
     {
+        //On récupère toujours le record initial
         $record = $this->model->findOrFail($id);
         $oldValues = $this->audit ? $record->getRawOriginal() : null;
-        $record->update($data);
 
-        // On regarde ce qui a changé APRES
+        //Procédure SQL ou Eloquent
+        if ($this instanceof HasSqlOverrides && $procedure = $this->getUpdateProcedureName()) {
+            if ($this->procedureExists($procedure)) {
+                $this->executeUpdateProcedure($procedure, $id, $data);
+                // On rafraîchit le modèle depuis la BDD car Eloquent
+                // ne sait pas ce que la procédure a modifié.
+                $record->refresh();
+            }
+        } else {
+            $record->update($data);
+        }
+
+        //Gestion de l'Audit
         if ($this->audit) {
+            //Eloquent remplit getChanges() automatiquement après update() ou refresh()
             $newValues = $record->getChanges();
-            // On ne log que si il y a vraiment eu un changement
+
             if (!empty($newValues)) {
-                // On ne garde dans le 'old' que ce qui a bougé
                 $relevantOld = array_intersect_key($oldValues, $newValues);
                 $this->writeLog('update', $record, $relevantOld, $newValues);
             }
@@ -134,14 +179,40 @@ abstract class CrudServiceBase
         return $record;
     }
 
-    public function destroy(mixed $id): bool
+   public function destroy(mixed $id): bool
     {
         $record = $this->model->findOrFail($id);
+
+        // Audit avant suppression
         if ($this->audit) {
-            // Avant de supprimer, on sauvegarde l'état final dans 'old_values'
             $this->writeLog('delete', $record, $record->toArray(), null);
         }
+
+        //Détection Procédure SQL
+        if ($this instanceof HasSqlOverrides && $procedure = $this->getDeleteProcedureName()) {
+            if ($this->procedureExists($procedure)) {
+                DB::select("CALL {$procedure}(?)", [$id]);
+                return true;
+            }
+        }
+
+        //Sinon Fallback Eloquent
         return $record->delete();
+    }
+
+    /**
+     * Helper pour transformer un item (Model ou stdClass) en Resource
+     */
+    protected function mapToResource(mixed $item): mixed
+    {
+        // Si l'item vient d'un QueryBuilder (vue SQL), on l'habille en Modèle
+        if (!($item instanceof Model)) {
+            $item = $this->model->newInstance((array) $item, true);
+            $item->fromSqlView = true;
+            $item->makeHidden('fromSqlView');
+        }
+
+        return new $this->ressource($item, $this->getResourceFields());
     }
 
     public function getResourceFields(): array

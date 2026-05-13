@@ -3,6 +3,7 @@
 namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class ServiceProxy
 {
@@ -17,7 +18,7 @@ class ServiceProxy
     {
         $result = call_user_func_array([$this->service, $name], $arguments);
 
-        if ($result instanceof Builder) {
+        if ($result instanceof Builder || $result instanceof QueryBuilder) {
             // On applique le filtre pour toutes les méthodes du service
             $result = $this->service->applySorting($result);
         }

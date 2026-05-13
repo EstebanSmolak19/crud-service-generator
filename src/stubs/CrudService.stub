@@ -5,8 +5,14 @@ namespace {{ namespace }};
 use {{ modelNamespace }}\{{ model }};
 use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\IFillableContract;
+use EstebanSmolak19\CrudServiceGenerator\Contracts\HasSqlOverrides;
 
-class {{ class }} extends CrudServiceBase implements IFillableContract
+/**
+ * Class {{ class }}
+ * * Pour personnaliser la configuration (tri, pagination, audit),
+ * @see \EstebanSmolak19\CrudServiceGenerator\Traits\HasCrudConfiguration
+ */
+class {{ class }} extends CrudServiceBase implements IFillableContract, HasSqlOverrides
 {
     protected array $fillable = [''];
 

@@ -3,6 +3,8 @@
 namespace EstebanSmolak19\CrudServiceGenerator\Contracts;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+
 
 interface IFillableContract
 {
@@ -33,6 +35,6 @@ interface IFillableContract
      * avec un overide de $orderBy = ['champs' => "ASC" ou "DESC"]
      * @return Builder
      */
-    public function applySorting(Builder $query): Builder;
+    public function applySorting(Builder|QueryBuilder $query): Builder|QueryBuilder;
 
 }

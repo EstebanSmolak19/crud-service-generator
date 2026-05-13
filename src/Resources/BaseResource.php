@@ -23,17 +23,32 @@ class BaseResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data = [];
+        //Détecter si on vient d'une Vue SQL (Priorité n°1)
+        if ($this->resource->fromSqlView ?? false) {
+            // Si c'est une vue, on récupère tous les attributs sans filtrer par $fillable
+            // On convertit en array au cas où c'est une stdClass
+            $data = is_array($this->resource)
+                ? $this->resource
+                : (method_exists($this->resource, 'getAttributes')
+                    ? $this->resource->getAttributes()
+                    : (array) $this->resource);
 
-        if($this->fillable === ['']) {
+            unset($data['fromSqlView']); // On retire la variable 'fromSqlView'
+            return $data;
+        }
+
+        // Sinon, on suit la logique standard (Fillable)
+        if ($this->fillable === ['']) {
             return parent::toArray($request);
         }
 
-        // Si aucun champ n'est défini, on peut retourner tous les attributs du modèle
-        $columns = !empty($this->fillable) ? $this->fillable : array_keys($this->resource->getAttributes());
+        $data = [];
+        $columns = !empty($this->fillable)
+            ? $this->fillable
+            : array_keys(method_exists($this->resource, 'getAttributes') ? $this->resource->getAttributes() : (array) $this->resource);
 
         foreach ($columns as $column) {
-            $data[$column] = $this->{$column}; // On récupère dynamiquement la valeur
+            $data[$column] = $this->resource->{$column} ?? null;
         }
 
         return $data;

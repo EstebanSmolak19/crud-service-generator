@@ -152,6 +152,7 @@ describe('Génération de Services CRUD', function () {
             ->toContain('namespace App\Services;')
             ->toContain('class UserService extends CrudServiceBase')
             ->toContain('implements IFillableContract')
+            ->toContain('HasSqlOverrides')
             ->toContain('User $model')
             ->not->toContain('{{ class }}');
     });

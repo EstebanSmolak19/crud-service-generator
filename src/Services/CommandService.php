@@ -9,10 +9,8 @@ use Illuminate\Support\Facades\Schema;
 
 class CommandService implements ICommandService
 {
-    protected function getExcludedColumns(): array
-    {
-        $basic = ['id', 'created_at', 'updated_at', 'deleted_at'];
-        return array_merge($basic, config('crud-service-generator.models.excluded_columns', []));
+    public array $excludedColumns {
+        get {  return array_merge(config('crud-service-generator.models.excluded_columns', [])); }
     }
 
     public function getServiceName(Command $command): string
@@ -92,10 +90,9 @@ class CommandService implements ICommandService
                 $tableName = $modelInstance->getTable();
                 if (Schema::hasTable($tableName)) {
                     $allColumns = Schema::getColumnListing($tableName);
-                    $excluded = $this->getExcludedColumns();
                     foreach ($allColumns as $col) {
-                        if (!in_array($col, $excluded)) {
-                            $fields .= "            '{$col}' => \$this->{$col},\n";
+                        if (!in_array($col, $this->excludedColumns)) {
+                            $fields .= "            '{$col}' => \$this->{$col},\n"; // Génère le contenu de la ressource.
                         }
                     }
                 }
