@@ -22,6 +22,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
             ->name('crud-service-generator')
             ->hasConfigFile()
             ->hasViews()
+            ->hasMigrations(['create_crud_service_generator_table'])
             ->hasCommands([
                     CrudServiceGeneratorCommand::class,
                     GenerateModel::class,

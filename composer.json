@@ -1,6 +1,6 @@
 {
     "name": "estebansmolak19/crud-service-generator",
-    "description": "This is my package crud-service-generator",
+    "description": "A PHP package to automatically generate CRUD service classes — Un package PHP pour générer automatiquement des classes de service CRUD.",
     "keywords": [
         "EstebanSmolak19",
         "laravel",

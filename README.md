@@ -1,5 +1,263 @@
 # CRUD Service Generator — Documentation
 
+**CRUD Service Generator** is a Laravel package that automates the creation of robust, secure and configurable CRUD services, based on **PHP 8 Attributes** and a built-in **Audit** system.
+
+---
+
+## 📦 Installation
+
+```bash
+composer require estebansmolak19/crud-service-generator
+
+php artisan vendor:publish --tag="crud-service-generator-config"
+php artisan vendor:publish --tag="crud-service-generator-migrations"
+php artisan migrate
+```
+
+---
+
+## 💡 Model Architecture — Double Inheritance
+
+```bash
+php artisan generate:model
+```
+
+The package synchronizes your models with the database without ever overwriting your code.
+
+| File | Role |
+|---|---|
+| `App\Models\Base\BaseArret.php` | Auto-generated — **overwritten** on every sync |
+| `App\Models\Arret.php` | Your file — generated **once only**, free to modify |
+
+```php
+// ✅ App\Models\Arret.php — add your methods here, safely
+class Arret extends BaseArret
+{
+    public function isAdmin(): bool
+    {
+        return true;
+    }
+}
+```
+
+---
+
+## 🔧 Commands
+
+### `php artisan make:service`
+
+Generates a service and its associated components.
+
+| Option | Effect |
+|---|---|
+| *(none)* | Generates an empty service |
+| `--crud` | Generates a service with CRUD methods |
+| `--controller` | Generates a service + API controller |
+| `--all` | Generates everything: **CRUD Service + CRUD Controller + Routes + Resource** |
+
+```bash
+# Minimal CRUD service
+php artisan make:service ArretService --crud
+
+# Generate everything at once
+php artisan make:service ArretService --all
+```
+
+With `--all`, the generator asks a few interactive questions:
+- The associated model (e.g. `Arret`)
+- The controller name
+- The route prefix (e.g. `arrets` → generates `GET /arrets`, `POST /arrets`, etc.)
+
+Routes are automatically added in `routes/service_generator.php`.
+
+### Other commands
+
+| Command | Description |
+|---|---|
+| `php artisan make:attribute MyAttribute` | Generates an attribute interceptor |
+| `php artisan generate:model` | Synchronizes models with the DB |
+| `php artisan config:apply` | Applies the configuration file |
+| `php artisan p:help` | Displays the full command guide |
+
+---
+
+## 🏗️ Anatomy of a CRUD Service
+
+```php
+class ArretService extends CrudServiceBase implements IFillableContract, HasSqlOverrides
+{
+    // 🔴 REQUIRED — forgetting this line throws a LogicException at startup
+    // role: filters columns exposed via API
+    protected array $fillable = ['nom', 'latitude', 'longitude'];
+
+    // Options available via HasCrudConfiguration (all optional)
+    protected bool  $audit   = true;             // Enables audit logs
+    protected array $orderBy = ['nom' => 'ASC']; // Default sort
+    protected int   $perPage = 15;               // Pagination
+
+    public function __construct(Arret $model)
+    {
+        parent::__construct($model);
+    }
+
+    public function permissions(): array
+    {
+        return [
+            'create'  => [IsAuthenticated::class],
+            'update'  => [IsAuthenticated::class],
+            'destroy' => [IsAuthenticated::class, IsAdmin::class],
+            // Missing keys = public access (e.g. 'all', 'find')
+        ];
+    }
+}
+```
+
+---
+
+## 📋 CRUD Methods
+
+| Method | Parameters | Description |
+|---|---|---|
+| `all()` | — | Returns all records, paginated according to `$perPage` |
+| `find($id)` | `mixed $id` | Returns a record by ID — `404` if not found |
+| `create($data)` | `array $data` | Creates a record, logs if `$audit = true` |
+| `update($id, $data)` | `mixed $id`, `array $data` | Updates, logs `old_values` / `new_values` if audit |
+| `destroy($id)` | `mixed $id` | Deletes, logs before deletion if audit, returns `bool` |
+
+---
+
+## 🔒 The Attribute System
+
+Attributes allow you to attach logic (security, validation...) to a method or an entire service, **without polluting the business logic**.
+
+Before each call, the package automatically inspects the declared attributes and executes them in order. If an attribute calls `abort()`, execution stops immediately.
+
+### Included attribute: `IsAuthenticated`
+
+Blocks with an `HTTP 401` if the user is not logged in.
+
+```php
+// A. Via permissions() — for standard CRUD methods (all, find, create, update, destroy)
+public function permissions(): array
+{
+    return [
+        'create'  => [IsAuthenticated::class],
+        'destroy' => [IsAuthenticated::class, IsAdmin::class], // All must pass
+    ];
+}
+
+// B. Via PHP 8 Attribute — for your custom methods
+#[IsAuthenticated]
+#[IsAdmin]
+public function exportData(): array { ... }
+```
+
+### Creating your own Attribute
+
+```bash
+php artisan make:attribute IsAdmin
+```
+
+```php
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+class IsAdmin implements ServiceAttributeContract
+{
+    public function handle(object $service, string $method, array &$params): void
+    {
+        // $service → instance of the called service
+        // $method  → name of the intercepted method (e.g. 'create')
+        // &$params → passed arguments, modifiable by reference
+
+        if (!auth()->user()?->is_admin) {
+            abort(403, "Access restricted to administrators.");
+        }
+    }
+}
+```
+
+You can also pass parameters to your attribute:
+
+```php
+#[IsRole('super-admin')]
+public function deleteAll(): void { ... }
+
+// In the attribute
+class IsRole implements ServiceAttributeContract
+{
+    public function __construct(private string $role)
+    {
+        // $this->role being the parameter initialized in the constructor.
+    }
+
+    public function handle(object $service, string $method, array &$params): void
+    {
+        if (!auth()->user()?->hasRole($this->role)) {
+            abort(403);
+        }
+    }
+}
+```
+
+---
+
+## 📋 Audit System and Logs
+
+Enable audit in your service:
+
+```php
+protected bool $audit = true;
+```
+
+Every `create`, `update`, `destroy` action is automatically recorded in `crud_service_logs`:
+
+| Column | Description | Example |
+|---|---|---|
+| `user_id` | Who acted | `7` |
+| `event` | Action type | `update` |
+| `auditable_type` | Model class | `App\Models\Arret` |
+| `auditable_id` | Record ID | `42` |
+| `old_values` | Snapshot before (JSON) | `{"nom":"Gare Nord"}` |
+| `new_values` | Snapshot after (JSON) | `{"nom":"Gare du Nord"}` |
+
+---
+
+## 💾 SQL Overrides (Views and Procedures)
+
+For complex architectures, you can bypass Eloquent.
+
+### SQL Views
+
+```php
+// The all() and find() methods will read from this view rather than the table with Eloquent
+protected ?string $sqlViewName = 'vue_arrets_avec_ligne';
+```
+
+⚠️ The view **must** expose the column defined in `$primaryKey` (default `id`) for `find()` to work.
+
+### Stored Procedures
+
+```php
+// Delegate create / update / destroy to SQL procedures
+protected ?string $sqlCreateProcedure = 'sp_create_arret';
+protected ?string $sqlUpdateProcedure = 'sp_update_arret';
+protected ?string $sqlDeleteProcedure = 'sp_delete_arret';
+```
+
+---
+
+## 👥 Credits
+
+- [EstebanSmolak19](https://github.com/EstebanSmolak19)
+
+## 📄 License
+The MIT License (MIT).
+
+---
+
+---
+
+# CRUD Service Generator — Documentation
+
 **CRUD Service Generator** est un package Laravel qui automatise la création de services CRUD
 robustes, sécurisés et configurables, basé sur les **Attributs PHP 8** et un système d'**Audit** intégré.
 
