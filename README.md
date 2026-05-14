@@ -8,7 +8,7 @@ robustes, sécurisés et configurables, basé sur les **Attributs PHP 8** et un 
 ## 📦 Installation
 
 ```bash
-composer require esteban/crud-service-generator
+composer require estebansmolak19/crud-service-generator
 
 php artisan vendor:publish --tag="crud-service-generator-config"
 php artisan vendor:publish --tag="crud-service-generator-migrations"
