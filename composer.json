@@ -6,7 +6,7 @@
         "laravel",
         "crud-service-generator"
     ],
-    "homepage": "https://github.com/esteban/crud-service-generator",
+    "homepage": "https://github.com/EstebanSmolak19/crud-service-generator",
     "license": "MIT",
     "authors": [
         {
@@ -70,6 +70,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "beta",
     "prefer-stable": true
 }
