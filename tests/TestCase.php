@@ -2,9 +2,9 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Tests;
 
+use EstebanSmolak19\CrudServiceGenerator\CrudServiceGeneratorServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use EstebanSmolak19\CrudServiceGenerator\CrudServiceGeneratorServiceProvider;
 
 class TestCase extends Orchestra
 {

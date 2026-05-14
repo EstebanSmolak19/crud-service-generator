@@ -17,39 +17,39 @@ describe('Génération de Services Simples', function () {
         }
     });
 
-    it("fonctionne via l'interaction ask()", function() {
+    it("fonctionne via l'interaction ask()", function () {
         $this->artisan('make:service')
-             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', 'AskService')
-             ->assertExitCode(0);
+            ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', 'AskService')
+            ->assertExitCode(0);
 
         expect(File::exists(app_path('Services/AskService.php')))->toBeTrue();
     });
 
-    it("fonctionne via l'argument direct", function() {
+    it("fonctionne via l'argument direct", function () {
         $this->artisan('make:service DirectService')
-             ->assertExitCode(0);
+            ->assertExitCode(0);
 
         expect(File::exists(app_path('Services/DirectService.php')))->toBeTrue();
     });
 
-    it("redemande un nom si le service existe déjà", function() {
+    it('redemande un nom si le service existe déjà', function () {
         $existingName = 'ExistingService';
         $newName = 'NewService';
 
         // On crée le conflit
         File::ensureDirectoryExists(app_path('Services'));
-        File::put(app_path("Services/{$existingName}.php"), "<?php");
+        File::put(app_path("Services/{$existingName}.php"), '<?php');
 
         $this->artisan('make:service')
-             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $existingName)
-             ->expectsOutput("Le service {$existingName} existe déjà !")
-             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $newName)
-             ->assertExitCode(0);
+            ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $existingName)
+            ->expectsOutput("Le service {$existingName} existe déjà !")
+            ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $newName)
+            ->assertExitCode(0);
 
         expect(File::exists(app_path("Services/{$newName}.php")))->toBeTrue();
     });
 
-    it("vérifie le contenu du service généré", function () {
+    it('vérifie le contenu du service généré', function () {
         $this->artisan('make:service UserService');
 
         $content = File::get(app_path('Services/UserService.php'));
@@ -77,19 +77,19 @@ describe('Génération de Services CRUD', function () {
         }
     });
 
-    it("fonctionne via l'interaction ask() et sans model existant", function() {
+    it("fonctionne via l'interaction ask() et sans model existant", function () {
         $this->artisan('make:service --crud')
             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', 'AskService')
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', 'Ask')
             ->expectsOutput("Le modèle Ask n'existe pas, création en cours...")
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
         expect(File::exists(app_path('Services/AskService.php')))->toBeTrue()
             ->and(File::exists(app_path('Models/Ask.php')))->toBeTrue();
     });
 
-    it("fonctionne avec un modèle déjà existant", function() {
+    it('fonctionne avec un modèle déjà existant', function () {
         $modelName = 'User';
         $modelPath = app_path("Models/{$modelName}.php");
 
@@ -100,46 +100,46 @@ describe('Génération de Services CRUD', function () {
             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', 'CrudService')
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', $modelName)
             ->doesntExpectOutput("Le modèle {$modelName} n'existe pas, création en cours...")
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
         expect(File::exists(app_path('Services/CrudService.php')))->toBeTrue();
     });
 
-    it("fonctionne avec le nom passé directement en argument", function() {
+    it('fonctionne avec le nom passé directement en argument', function () {
         $serviceName = 'DirectCrudService';
         $modelName = 'Post';
 
-        File::put(app_path("Models/{$modelName}.php"), "<?php");
+        File::put(app_path("Models/{$modelName}.php"), '<?php');
 
         $this->artisan("make:service {$serviceName} --crud")
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', $modelName)
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
         expect(File::exists(app_path("Services/{$serviceName}.php")))->toBeTrue();
     });
 
-    it("redemande un nom si le service existe déjà en mode CRUD", function() {
+    it('redemande un nom si le service existe déjà en mode CRUD', function () {
         $existingName = 'ConflictService';
         $validName = 'FinalService';
         $modelName = 'User';
 
-        File::put(app_path("Services/{$existingName}.php"), "<?php");
-        File::put(app_path("Models/{$modelName}.php"), "<?php");
+        File::put(app_path("Services/{$existingName}.php"), '<?php');
+        File::put(app_path("Models/{$modelName}.php"), '<?php');
 
         $this->artisan('make:service --crud')
-             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $existingName)
-             ->expectsOutput("Le service {$existingName} existe déjà !")
-             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $validName)
-             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', $modelName)
-             ->expectsOutput("✅ Composants générés avec succès !")
-             ->assertExitCode(0);
+            ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $existingName)
+            ->expectsOutput("Le service {$existingName} existe déjà !")
+            ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $validName)
+            ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', $modelName)
+            ->expectsOutput('✅ Composants générés avec succès !')
+            ->assertExitCode(0);
 
         expect(File::exists(app_path("Services/{$validName}.php")))->toBeTrue();
     });
 
-    it("vérifie le contenu du service CRUD généré", function () {
+    it('vérifie le contenu du service CRUD généré', function () {
         $this->artisan('make:service UserService --crud')
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', 'User')
             ->expectsOutput("Le modèle User n'existe pas, création en cours...")
@@ -178,13 +178,13 @@ describe('Génération de Services avec Controller', function () {
         }
     });
 
-    it("génère un service et un contrôleur simple", function () {
+    it('génère un service et un contrôleur simple', function () {
         $serviceName = 'ControllerService';
         $controllerName = 'TestController';
 
         $this->artisan("make:service {$serviceName} --controller")
             ->expectsQuestion('Quel est le nom de votre controller ? (Ex. UserController)', $controllerName)
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
         // Vérification des fichiers
@@ -215,7 +215,7 @@ describe('Génération de Services avec Controller', function () {
 
         // Créer le doublon
         File::ensureDirectoryExists(app_path('Services'));
-        File::put(app_path("Services/{$existingService}.php"), "<?php");
+        File::put(app_path("Services/{$existingService}.php"), '<?php');
 
         $this->artisan('make:service --controller')
             ->expectsQuestion('Quel est le nom de votre service ? (Ex. UserService)', $existingService)
@@ -228,13 +228,13 @@ describe('Génération de Services avec Controller', function () {
             ->and(File::exists(app_path("Http/Controllers/{$controllerName}.php")))->toBeTrue();
     });
 
-    it("vérifie le contenu du controller généré", function () {
+    it('vérifie le contenu du controller généré', function () {
         $serviceName = 'ControllerService';
         $controllerName = 'TestController';
 
         $this->artisan("make:service {$serviceName} --controller")
             ->expectsQuestion('Quel est le nom de votre controller ? (Ex. UserController)', $controllerName)
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
         $content = File::get(app_path("Http/Controllers/{$controllerName}.php"));
@@ -242,7 +242,7 @@ describe('Génération de Services avec Controller', function () {
         expect($content)
             ->toContain('namespace App\Http\Controllers;')
             ->toContain("class $controllerName")
-            ->toContain("extends Controller")
+            ->toContain('extends Controller')
             ->toContain("private $serviceName")
             ->not->toContain('{{ class }}')
             ->not->toContain('CrudControllerBase');
@@ -259,7 +259,7 @@ describe('Génération Complète (--all)', function () {
             app_path('Services'),
             app_path('Models'),
             app_path('Http/Controllers'),
-            base_path('routes')
+            base_path('routes'),
         ];
 
         foreach ($folders as $path) {
@@ -285,27 +285,27 @@ describe('Génération Complète (--all)', function () {
             ->expectsQuestion('Quel est le nom de la route associée ? (Ex. users)', $routeName)
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', $modelName)
             ->expectsOutput("Le modèle {$modelName} n'existe pas, création en cours...")
-            ->expectsOutput("✅ Composants générés avec succès !")
+            ->expectsOutput('✅ Composants générés avec succès !')
             ->assertExitCode(0);
 
-        //Vérification des fichiers physiques
+        // Vérification des fichiers physiques
         expect(File::exists(app_path("Services/{$serviceName}.php")))->toBeTrue()
             ->and(File::exists(app_path("Http/Controllers/{$controllerName}.php")))->toBeTrue()
             ->and(File::exists(app_path("Models/{$modelName}.php")))->toBeTrue()
             ->and(File::exists(base_path('routes/service_generator.php')))->toBeTrue();
 
-        //Vérification du contenu du Controller (doit être un CRUD)
+        // Vérification du contenu du Controller (doit être un CRUD)
         $controllerContent = File::get(app_path("Http/Controllers/{$controllerName}.php"));
         expect($controllerContent)->toContain('extends CrudControllerBase');
 
-        //Vérification de l'enregistrement de la Route
+        // Vérification de l'enregistrement de la Route
         $routeContent = File::get(base_path('routes/service_generator.php'));
         expect($routeContent)
             ->toContain("use Illuminate\Support\Facades\Route;")
             ->toContain("Route::apiResource('posts', \App\Http\Controllers\PostController::class);");
     });
 
-    it("redemande le nom de la route si elle est vide en mode --all", function () {
+    it('redemande le nom de la route si elle est vide en mode --all', function () {
         $serviceName = 'RouteRetryService';
 
         $this->artisan("make:service {$serviceName} --all")
@@ -326,7 +326,7 @@ describe('Génération Complète (--all)', function () {
         $initialContent = "<?php\n\nuse Illuminate\Support\Facades\Route;\n\nRoute::get('test', fn() => 'ok');\n";
         File::put(base_path('routes/service_generator.php'), $initialContent);
 
-        $this->artisan("make:service FirstService --all")
+        $this->artisan('make:service FirstService --all')
             ->expectsQuestion('Quel est le nom de votre controller ? (Ex. UserController)', 'FirstController')
             ->expectsQuestion('Quel est le nom de la route associée ? (Ex. users)', 'first')
             ->expectsQuestion('Quel est le modèle associé ? (Ex. User)', 'User')
