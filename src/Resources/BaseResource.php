@@ -16,6 +16,7 @@ class BaseResource extends JsonResource
         parent::__construct($resource);
         $this->fillable = $fillable;
     }
+
     /**
      * Transform the resource into an array.
      *
@@ -23,7 +24,7 @@ class BaseResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        //Détecter si on vient d'une Vue SQL (Priorité n°1)
+        // Détecter si on vient d'une Vue SQL (Priorité n°1)
         if ($this->resource->fromSqlView ?? false) {
             // Si c'est une vue, on récupère tous les attributs sans filtrer par $fillable
             // On convertit en array au cas où c'est une stdClass
@@ -34,6 +35,7 @@ class BaseResource extends JsonResource
                     : (array) $this->resource);
 
             unset($data['fromSqlView']); // On retire la variable 'fromSqlView'
+
             return $data;
         }
 
@@ -43,7 +45,7 @@ class BaseResource extends JsonResource
         }
 
         $data = [];
-        $columns = !empty($this->fillable)
+        $columns = ! empty($this->fillable)
             ? $this->fillable
             : array_keys(method_exists($this->resource, 'getAttributes') ? $this->resource->getAttributes() : (array) $this->resource);
 

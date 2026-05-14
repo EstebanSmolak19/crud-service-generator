@@ -22,7 +22,7 @@ class CrudControllerBase extends Controller
      */
     public function __get($name)
     {
-        if($name === 'service') {
+        if ($name === 'service') {
             return new ServiceProxy($this->realService);
         }
     }
@@ -35,6 +35,7 @@ class CrudControllerBase extends Controller
     public function store(Request $request)
     {
         $data = $this->service->create($request->all());
+
         return response()->json($data, 201);
     }
 
@@ -46,12 +47,14 @@ class CrudControllerBase extends Controller
     public function update(Request $request, int $id)
     {
         $data = $this->service->update($id, $request->all());
+
         return response()->json($data);
     }
 
     public function destroy(int $id)
     {
         $this->service->destroy($id);
+
         return response()->json(null, 204);
     }
 }
