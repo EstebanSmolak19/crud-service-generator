@@ -1,86 +1,258 @@
-# This is my package crud-service-generator
+# CRUD Service Generator — Documentation
 
-FAIRE LES ATTRIBUTES CUSTOM + COMMANDE
+**CRUD Service Generator** est un package Laravel qui automatise la création de services CRUD
+robustes, sécurisés et configurables, basé sur les **Attributs PHP 8** et un système d'**Audit** intégré.
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/esteban/crud-service-generator.svg?style=flat-square)](https://packagist.org/packages/esteban/crud-service-generator)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/esteban/crud-service-generator/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/esteban/crud-service-generator/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/esteban/crud-service-generator/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/esteban/crud-service-generator/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/esteban/crud-service-generator.svg?style=flat-square)](https://packagist.org/packages/esteban/crud-service-generator)
+---
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/crud-service-generator.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/crud-service-generator)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
-
-## Installation
-
-You can install the package via composer:
+## 📦 Installation
 
 ```bash
 composer require esteban/crud-service-generator
-```
 
-You can publish and run the migrations with:
-
-```bash
+php artisan vendor:publish --tag="crud-service-generator-config"
 php artisan vendor:publish --tag="crud-service-generator-migrations"
 php artisan migrate
 ```
 
-You can publish the config file with:
+---
+
+## 💡 Architecture des Modèles — Double Héritage
 
 ```bash
-php artisan vendor:publish --tag="crud-service-generator-config"
+php artisan generate:model
 ```
 
-This is the contents of the published config file:
+Le package synchronise vos modèles avec la base de données sans jamais écraser votre code.
+
+| Fichier | Rôle |
+|---|---|
+| `App\Models\Base\BaseArret.php` | Généré automatiquement — **écrasé** à chaque sync |
+| `App\Models\Arret.php` | Votre fichier — généré **une seule fois**, libre à modifier |
 
 ```php
-return [
-];
+// ✅ App\Models\Arret.php — ajoutez vos méthodes ici, en toute sécurité
+class Arret extends BaseArret
+{
+    public function isAdmin(): bool
+    {
+        return true;
+    }
+}
 ```
 
-Optionally, you can publish the views using
+---
+
+## 🔧 Commandes
+
+### `php artisan make:service`
+
+Génère un service et ses composants associés.
+
+| Option | Effet |
+|---|---|
+| *(aucune)* | Génère un service vide |
+| `--crud` | Génère un service avec les méthodes CRUD |
+| `--controller` | Génère un service + contrôleur API |
+| `--all` | Génère la totale : **Service CRUD + Controller CRUD + Routes + Resource** |
 
 ```bash
-php artisan vendor:publish --tag="crud-service-generator-views"
+# Service CRUD minimal
+php artisan make:service ArretService --crud
+
+# Tout générer d'un coup
+php artisan make:service ArretService --all
 ```
 
-## Usage
+Avec `--all`, le générateur vous pose quelques questions interactives :
+- Le modèle associé (ex: `Arret`)
+- Le nom du contrôleur
+- Le préfixe de route (ex: `arrets` → génère `GET /arrets`, `POST /arrets`, etc.)
+
+Les routes sont ajoutées automatiquement dans `routes/service_generator.php`.
+
+### Autres commandes
+
+| Commande | Description |
+|---|---|
+| `php artisan make:attribute MonAttribut` | Génère un intercepteur d'attribut |
+| `php artisan generate:model` | Synchronise les modèles avec la BDD |
+| `php artisan config:apply` | Applique le fichier de configuration|
+| `php artisan p:help` | Affiche le guide complet des commandes|
+
+---
+
+## 🏗️ Anatomie d'un Service CRUD
 
 ```php
-$crudServiceGenerator = new EstebanSmolak19\CrudServiceGenerator();
-echo $crudServiceGenerator->echoPhrase('Hello, EstebanSmolak19!');
+class ArretService extends CrudServiceBase implements IFillableContract, HasSqlOverrides
+{
+    // 🔴 OBLIGATOIRE — oublier cette ligne lève une LogicException au démarrage
+    // rôle : filtre des colonnes exposées en API
+    protected array $fillable = ['nom', 'latitude', 'longitude'];
+
+    // Options disponibles via HasCrudConfiguration (toutes optionnelles)
+    protected bool  $audit   = true;             // Active les logs d'audit
+    protected array $orderBy = ['nom' => 'ASC']; // Tri par défaut
+    protected int   $perPage = 15;               // Pagination
+
+    public function __construct(Arret $model)
+    {
+        parent::__construct($model);
+    }
+
+    public function permissions(): array
+    {
+        return [
+            'create'  => [IsAuthenticated::class],
+            'update'  => [IsAuthenticated::class],
+            'destroy' => [IsAuthenticated::class, IsAdmin::class],
+            // Les clés absentes = accès public (ex: 'all', 'find')
+        ];
+    }
+}
 ```
 
-## Testing
+---
+
+## 📋 Méthodes CRUD
+
+| Méthode | Paramètres | Description |
+|---|---|---|
+| `all()` | — | Retourne tous les enregistrements, paginé selon `$perPage` |
+| `find($id)` | `mixed $id` | Retourne un enregistrement par ID — `404` si introuvable |
+| `create($data)` | `array $data` | Crée un enregistrement, logue si `$audit = true` |
+| `update($id, $data)` | `mixed $id`, `array $data` | Met à jour, logue `old_values` / `new_values` si audit |
+| `destroy($id)` | `mixed $id` | Supprime, logue avant suppression si audit, retourne `bool` |
+
+---
+
+## 🔒 Le Système d'Attributs
+
+Les attributs permettent d'attacher de la logique (sécurité, validation...) sur une méthode
+ou un service entier, **sans polluer la logique métier**.
+
+Avant chaque appel, le package inspecte automatiquement les attributs déclarés et les exécute
+dans l'ordre. Si un attribut fait un `abort()`, l'exécution s'arrête immédiatement.
+
+### Attribut inclus : `IsAuthenticated`
+
+Bloque avec un `HTTP 401` si l'utilisateur n'est pas connecté.
+
+```php
+// A. Via permissions() — pour les méthodes CRUD standards (all, find, create, update, destroy)
+public function permissions(): array
+{
+    return [
+        'create'  => [IsAuthenticated::class],
+        'destroy' => [IsAuthenticated::class, IsAdmin::class], // Tous doivent passer
+    ];
+}
+
+// B. Via Attribut PHP 8 — pour vos méthodes personnalisées
+#[IsAuthenticated]
+#[IsAdmin]
+public function exportData(): array { ... }
+```
+
+### Créer votre propre Attribut
 
 ```bash
-composer test
+php artisan make:attribute IsAdmin
 ```
 
-## Changelog
+```php
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+class IsAdmin implements ServiceAttributeContract
+{
+    public function handle(object $service, string $method, array &$params): void
+    {
+        // $service → instance du service appelé
+        // $method  → nom de la méthode interceptée (ex: 'create')
+        // &$params → arguments passés, modifiables par référence
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+        if (!auth()->user()?->is_admin) {
+            abort(403, "Accès réservé aux administrateurs.");
+        }
+    }
+}
+```
 
-## Contributing
+Vous pouvez également passer des paramètres à votre attribut :
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+```php
+#[IsRole('super-admin')]
+public function deleteAll(): void { ... }
 
-## Security Vulnerabilities
+// Dans l'attribut
+class IsRole implements ServiceAttributeContract
+{
+    public function __construct(private string $role)
+    {
+        // $this->role étant le paramètre initialisé dans le constructeur.
+    }
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+    public function handle(object $service, string $method, array &$params): void
+    {
+        if (!auth()->user()?->hasRole($this->role)) {
+            abort(403);
+        }
+    }
+}
+```
 
-## Credits
+---
 
-- [EstebanSmolak19](https://github.com/Esteban)
-- [All Contributors](../../contributors)
+## 📋 Système d'Audit et Logs
 
-## License
+Activez l'audit dans votre service :
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+```php
+protected bool $audit = true;
+```
+
+Chaque action `create`, `update`, `destroy` est enregistrée automatiquement dans
+`crud_service_logs` :
+
+| Colonne | Description | Exemple |
+|---|---|---|
+| `user_id` | Qui a agi | `7` |
+| `event` | Type d'action | `update` |
+| `auditable_type` | Classe du modèle | `App\Models\Arret` |
+| `auditable_id` | ID de l'enregistrement | `42` |
+| `old_values` | Snapshot avant (JSON) | `{"nom":"Gare Nord"}` |
+| `new_values` | Snapshot après (JSON) | `{"nom":"Gare du Nord"}` |
+
+---
+
+## 💾 Surcharges SQL (Vues et Procédures)
+
+Pour les architectures complexes, vous pouvez court-circuiter Eloquent.
+
+### Vues SQL
+
+```php
+// Les méthodes all() et find() liront depuis cette vue plutôt que la table avec Eloquent
+protected ?string $sqlViewName = 'vue_arrets_avec_ligne';
+```
+
+⚠️ La vue **doit** exposer la colonne définie dans `$primaryKey` (par défaut `id`)
+pour que `find()` fonctionne.
+
+### Procédures Stockées
+
+```php
+// Déléguer create / update / destroy à des procédures SQL
+protected ?string $sqlCreateProcedure = 'sp_create_arret';
+protected ?string $sqlUpdateProcedure = 'sp_update_arret';
+protected ?string $sqlDeleteProcedure = 'sp_delete_arret';
+```
+
+---
+
+## 👥 Credits
+
+- [EstebanSmolak19](https://github.com/EstebanSmolak19)
+
+## 📄 License
+The MIT License (MIT).
