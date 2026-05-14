@@ -44,7 +44,6 @@ abstract class CrudServiceBase
             'auditable_id'   => $model->id,
             'old_values'     => $old ? json_encode($old) : null,
             'new_values'     => $new ? json_encode($new) : null,
-            'ip_address'     => request()->ip(),
             'created_at'     => now(),
             'updated_at'     => now(),
         ]);
