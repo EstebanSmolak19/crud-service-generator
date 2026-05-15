@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create(config('crud-service-generator.database.table_name_log'), function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('set null');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('event');
 
             $table->morphs('auditable');
