@@ -44,6 +44,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
     {
         parent::register();
 
+        $this->app->register(DashboardProvider::class);
         $this->app->bind(IModelService::class, ModelService::class);
         $this->app->bind(ICommandService::class, CommandService::class);
     }
