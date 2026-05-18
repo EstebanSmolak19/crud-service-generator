@@ -2,10 +2,10 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Services\Dashboard;
 
+use EstebanSmolak19\CrudServiceGenerator\Attributes\IsService;
 use Illuminate\Support\Facades\File;
 use ReflectionClass;
 use ReflectionMethod;
-use EstebanSmolak19\CrudServiceGenerator\Attributes\IsService;
 
 class ScannerService
 {
@@ -19,7 +19,7 @@ class ScannerService
         $controllersPath = app_path('Http/Controllers');
 
         // Si le dossier n'existe pas
-        if (!File::isDirectory($controllersPath)) {
+        if (! File::isDirectory($controllersPath)) {
             return [];
         }
 
@@ -44,10 +44,10 @@ class ScannerService
 
                 // On extrait les informations du contrôleur
                 $detectedControllers[] = [
-                    'name'             => $className,                               // Nom complet (Namespace)
-                    'short_name'       => $reflection->getShortName(),              // Juste le nom de la classe
+                    'name' => $className,                               // Nom complet (Namespace)
+                    'short_name' => $reflection->getShortName(),              // Juste le nom de la classe
                     'injected_service' => $injectedService,                         // Le service détecté ou null
-                    'methods'          => $this->getControllerMethods($reflection), // Ses fonctions publiques
+                    'methods' => $this->getControllerMethods($reflection), // Ses fonctions publiques
                 ];
             }
         }
@@ -64,7 +64,7 @@ class ScannerService
         $mapping = [];
 
         foreach ($allControllers as $controller) {
-            if (!empty($controller['injected_service'])) {
+            if (! empty($controller['injected_service'])) {
                 $mapping[$controller['name']] = $controller['injected_service']['name'];
             }
         }
@@ -80,7 +80,7 @@ class ScannerService
         $constructor = $reflection->getConstructor();
 
         // S'il n'y a pas de constructeur, aucun service n'est injecté
-        if (!$constructor) {
+        if (! $constructor) {
             return null;
         }
 
@@ -89,7 +89,7 @@ class ScannerService
             $type = $parameter->getType();
 
             // On ignore les types primitifs (string, int...) ou l'absence de type
-            if (!$type || $type->isBuiltin()) {
+            if (! $type || $type->isBuiltin()) {
                 continue;
             }
 
@@ -102,9 +102,9 @@ class ScannerService
                 $attributes = $serviceReflection->getAttributes(IsService::class);
 
                 // Si trouvé, on extrait les informations du service
-                if (!empty($attributes)) {
+                if (! empty($attributes)) {
                     return [
-                        'name'       => $parameterClassName,
+                        'name' => $parameterClassName,
                         'short_name' => $serviceReflection->getShortName(),
                     ];
                 }
@@ -127,7 +127,7 @@ class ScannerService
         // On remplace les slashs par des antislashs pour le namespace
         $subNamespace = str_replace('/', '\\', $classWithoutExtension);
 
-        return 'App\\Http\\Controllers\\' . $subNamespace;
+        return 'App\\Http\\Controllers\\'.$subNamespace;
     }
 
     /**

@@ -9,12 +9,12 @@ class DashboardProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php'); // Charge les routes du dashboard.
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php'); // Charge les routes du dashboard.
 
-        $this->loadViewsFrom(__DIR__ . '../resources/views', 'crud-service-generator');
+        $this->loadViewsFrom(__DIR__.'../resources/views', 'crud-service-generator');
 
         $this->loadViewComponentsAs('app', [
-            Sidebar::class
+            Sidebar::class,
         ]);
     }
 }

@@ -2,21 +2,21 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Constants;
 
-class SidebarMenu {
-
-   private static array $menu = [
+class SidebarMenu
+{
+    private static array $menu = [
         [
             'title' => '📁 Contrôleurs',
-            'route' => 'controllers'
+            'route' => 'controllers',
         ],
         [
             'title' => '⚙️ Services',
-            'route' => 'services'    
+            'route' => 'services',
         ],
-   ];
+    ];
 
-   public static function all(): array
-   {
+    public static function all(): array
+    {
         return self::$menu;
-   }
+    }
 }

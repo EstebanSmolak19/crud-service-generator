@@ -3,18 +3,22 @@
 namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use EstebanSmolak19\CrudServiceGenerator\Contracts\IModelService;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 
 class ModelService implements IModelService
 {
     public array $whitelist {
-        get { return array_merge(config('crud-service-generator.models.whitelist', [])); }
+        get {
+            return array_merge(config('crud-service-generator.models.whitelist', []));
+        }
     }
 
     public array $excludedColumns {
-        get { return array_merge(config('crud-service-generator.models.excluded_columns', [])); }
+        get {
+            return array_merge(config('crud-service-generator.models.excluded_columns', []));
+        }
     }
 
     public function searchTable(): array
@@ -24,8 +28,9 @@ class ModelService implements IModelService
         $tables = Schema::getTables();
 
         return array_filter($tables, function ($table) use ($db_name) {
-            $isGoodSchema = !isset($table['schema']) || $table['schema'] === $db_name;
-            return $isGoodSchema && !in_array($table['name'], $this->whitelist);
+            $isGoodSchema = ! isset($table['schema']) || $table['schema'] === $db_name;
+
+            return $isGoodSchema && ! in_array($table['name'], $this->whitelist);
         });
     }
 
@@ -48,26 +53,30 @@ class ModelService implements IModelService
         $settingsPath = base_path('.vscode/settings.json');
         $configValue = config('crud-service-generator.models.hide_base_models_in_vscode', true);
 
-        if (!File::exists($settingsPath)) {
+        if (! File::exists($settingsPath)) {
             // Si le fichier n'existe pas et qu'on veut masquer, on le crée.
-            if (!$configValue) return;
+            if (! $configValue) {
+                return;
+            }
             File::makeDirectory(base_path('.vscode'), 0777, true, true);
             $settings = [];
         } else {
             $settings = json_decode(File::get($settingsPath), true);
-            if (json_last_error() !== JSON_ERROR_NONE) return;
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return;
+            }
         }
 
         if ($configValue) {
-            //TRUE -> On ajoute/maintient l'exclusion
+            // TRUE -> On ajoute/maintient l'exclusion
             $settings['files.exclude']['app/Models/Base'] = true;
         } else {
-            //FALSE -> On retire l'exclusion si elle existe
+            // FALSE -> On retire l'exclusion si elle existe
             if (isset($settings['files.exclude']['app/Models/Base'])) {
                 unset($settings['files.exclude']['app/Models/Base']);
             }
 
-            //Si 'files.exclude' est devenu vide, on peut supprimer la clé parente pour faire propre
+            // Si 'files.exclude' est devenu vide, on peut supprimer la clé parente pour faire propre
             if (isset($settings['files.exclude']) && empty($settings['files.exclude'])) {
                 unset($settings['files.exclude']);
             }
@@ -75,7 +84,7 @@ class ModelService implements IModelService
 
         // On enregistre uniquement si le tableau n'est pas vide,
         // ou si le fichier existait déjà pour ne pas laisser de fichiers fantômes
-        if (!empty($settings) || File::exists($settingsPath)) {
+        if (! empty($settings) || File::exists($settingsPath)) {
             File::put(
                 $settingsPath,
                 json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
@@ -89,12 +98,12 @@ class ModelService implements IModelService
     private function ensureDirectoriesExist(): void
     {
         $directories = [
-            app_path("Models"),
-            app_path("Models/Base")
+            app_path('Models'),
+            app_path('Models/Base'),
         ];
 
         foreach ($directories as $directory) {
-            if (!File::isDirectory($directory)) {
+            if (! File::isDirectory($directory)) {
                 File::makeDirectory($directory, 0777, true);
             }
         }
@@ -108,8 +117,10 @@ class ModelService implements IModelService
         $tableName = $table['name'];
         $className = Str::studly(Str::singular($tableName));
 
-        $stubPath = __DIR__ . '/../stubs/Model.stub';
-        if (!File::exists($stubPath)) return;
+        $stubPath = __DIR__.'/../stubs/Model.stub';
+        if (! File::exists($stubPath)) {
+            return;
+        }
 
         // Préparation des données
         $data = $this->prepareModelData($tableName, $allTables);
@@ -135,10 +146,10 @@ class ModelService implements IModelService
         $relations = $this->generateAllRelations($tableName, $allTables, $imports);
 
         return [
-            'primaryKeyLine' => ($primaryKey !== 'id') ? "\n    protected \$primaryKey = '{$primaryKey}';" : "",
-            'fillableString' => "\n        '" . implode("',\n        '", $fillableColumns) . "',\n    ",
+            'primaryKeyLine' => ($primaryKey !== 'id') ? "\n    protected \$primaryKey = '{$primaryKey}';" : '',
+            'fillableString' => "\n        '".implode("',\n        '", $fillableColumns)."',\n    ",
             'useString' => implode("\n", array_unique($imports)),
-            'relations' => $relations
+            'relations' => $relations,
         ];
     }
 
@@ -149,7 +160,7 @@ class ModelService implements IModelService
     {
         $content = str_replace(
             ['{{ namespace }}', '{{ imports }}', '{{ class }}', '{{ table }}', '{{ primaryKey }}', '{{ fillable }}', '{{ relations }}'],
-            ["App\\Models\\Base", $data['useString'], $className, $tableName, $data['primaryKeyLine'], $data['fillableString'], $data['relations']],
+            ['App\\Models\\Base', $data['useString'], $className, $tableName, $data['primaryKeyLine'], $data['fillableString'], $data['relations']],
             $stubContent
         );
 
@@ -166,7 +177,7 @@ class ModelService implements IModelService
     {
         $path = app_path("Models/{$className}.php");
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             $content = "<?php\n\nnamespace App\Models;\n\nuse App\Models\Base\\{$className} as Base{$className};\n\nclass {$className} extends Base{$className}\n{\n    // Ajoutez votre logique personnalisée ici\n}\n";
             File::put($path, $content);
         }
@@ -174,7 +185,7 @@ class ModelService implements IModelService
 
     private function generateAllRelations(string $currentTable, array $allTables, array &$imports): string
     {
-        $content = "";
+        $content = '';
 
         // BELONGSTO
         foreach (Schema::getForeignKeys($currentTable) as $fk) {
@@ -182,7 +193,7 @@ class ModelService implements IModelService
             $foreignTable = $fk['foreign_table'];
 
             $methodName = Str::camel(preg_replace('/(_id|id_)/i', '', $localColumn));
-            $relatedModel = "\\App\\Models\\" . Str::studly(Str::singular($foreignTable));
+            $relatedModel = '\\App\\Models\\'.Str::studly(Str::singular($foreignTable));
 
             $imports[] = "use Illuminate\Database\Eloquent\Relations\BelongsTo;";
 
@@ -195,14 +206,16 @@ class ModelService implements IModelService
         // HASMANY
         foreach ($allTables as $otherTable) {
             $otherTableName = $otherTable['name'];
-            if ($otherTableName === $currentTable) continue;
+            if ($otherTableName === $currentTable) {
+                continue;
+            }
 
             foreach (Schema::getForeignKeys($otherTableName) as $fk) {
                 if ($fk['foreign_table'] === $currentTable) {
                     $foreignColumn = $fk['columns'][0];
 
                     $methodName = Str::camel(Str::plural(Str::singular($otherTableName)));
-                    $relatedModel = "\\App\\Models\\" . Str::studly(Str::singular($otherTableName));
+                    $relatedModel = '\\App\\Models\\'.Str::studly(Str::singular($otherTableName));
 
                     $imports[] = "use Illuminate\Database\Eloquent\Relations\HasMany;";
 

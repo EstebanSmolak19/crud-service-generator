@@ -7,7 +7,7 @@ use Illuminate\Routing\Controller;
 
 class DashboardController extends Controller
 {
-    public function __construct(private ScannerService $service) { }
+    public function __construct(private ScannerService $service) {}
 
     public function index()
     {

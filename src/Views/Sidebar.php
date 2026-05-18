@@ -9,6 +9,7 @@ use Illuminate\View\Component;
 class Sidebar extends Component
 {
     public array $menu;
+
     public array $controllers;
 
     public function __construct(private ScannerService $service)

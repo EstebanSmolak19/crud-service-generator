@@ -25,7 +25,8 @@ class CrudServiceGeneratorCommand extends Command
         $optionsCount = ($this->option('crud') ? 1 : 0) + ($this->option('controller') ? 1 : 0) + ($this->option('all') ? 1 : 0);
 
         if ($optionsCount > 1) {
-            $this->error("Veuillez choisir une seule option parmi --crud, --controller ou --all.");
+            $this->error('Veuillez choisir une seule option parmi --crud, --controller ou --all.');
+
             return Command::FAILURE;
         }
 
@@ -33,6 +34,7 @@ class CrudServiceGeneratorCommand extends Command
 
         if ($state['controller'] && file_exists($state['controllerPath'])) {
             $this->error("Le contrôleur {$state['controllerName']} existe déjà !");
+
             return Command::FAILURE;
         }
 
@@ -50,7 +52,7 @@ class CrudServiceGeneratorCommand extends Command
         $controller = $isAll || $isControllerOnly;
         $crud = $isAll || $isCrudOnly;
 
-        $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
+        $configPath = config($this->service->getConfigName().'.path', 'app/Services');
         $className = basename($input);
 
         $controllerName = $controller ? $this->service->getControllerName($this) : '';
@@ -62,22 +64,22 @@ class CrudServiceGeneratorCommand extends Command
             'input' => $input,
             'className' => $className,
             'namespace' => $this->service->determineNamespace($input, $configPath),
-            'path' => base_path($configPath . "/{$input}.php"),
+            'path' => base_path($configPath."/{$input}.php"),
             'crud' => $crud,
             'controller' => $controller,
             'all_mode' => $isAll, // L'élément manquant qui causait l'erreur
-            'suffix' => config($this->service->getConfigName() . '.method_suffix', 'Async'),
-            'useStrict' => config($this->service->getConfigName() . '.strict_types', true),
+            'suffix' => config($this->service->getConfigName().'.method_suffix', 'Async'),
+            'useStrict' => config($this->service->getConfigName().'.strict_types', true),
             'model' => $crud ? $this->service->interactModelCli($this) : null,
             'baseNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\CrudServiceBase',
             'modelNamespace' => 'App\\Models',
 
-            'controllerName'      => $controllerName,
+            'controllerName' => $controllerName,
             'controllerNamespace' => 'App\\Http\\Controllers',
-            'controllerPath'      => app_path("Http/Controllers/{$controllerName}.php"),
-            'serviceNamespace'    => $this->service->determineNamespace($input, $configPath),
+            'controllerPath' => app_path("Http/Controllers/{$controllerName}.php"),
+            'serviceNamespace' => $this->service->determineNamespace($input, $configPath),
             'baseControllerNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\Controllers\\CrudControllerBase',
-            'routeName'           => strtolower($routeName),
+            'routeName' => strtolower($routeName),
         ];
     }
 }
