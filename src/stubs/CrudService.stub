@@ -7,12 +7,14 @@ use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\IFillableContract;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\HasSqlOverrides;
 use EstebanSmolak19\CrudServiceGenerator\Attributes\IsAuthenticated;
+use EstebanSmolak19\CrudServiceGenerator\Attributes\IsService;
 
 /**
  * Class {{ class }}
  * * Pour personnaliser la configuration (tri, pagination, audit),
  * @see \EstebanSmolak19\CrudServiceGenerator\Traits\HasCrudConfiguration
  */
+ #[IsService]
 class {{ class }} extends CrudServiceBase implements IFillableContract, HasSqlOverrides
 {
     protected array $fillable = [''];

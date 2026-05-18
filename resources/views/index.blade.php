@@ -7,6 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        @include('crud-service-generator::js.navigation')
+        @include('crud-service-generator::js.app')
+    </script>
+
 </head>
 <body class="h-full text-gray-100 antialiased" x-data="crudStudio()">
 

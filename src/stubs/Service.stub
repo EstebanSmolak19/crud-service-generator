@@ -1,7 +1,9 @@
 <?php
 
 namespace {{ namespace }};
+use EstebanSmolak19\CrudServiceGenerator\Attributes\IsService;
 
+#[IsService]
 class {{ class }}
 {
     /**
