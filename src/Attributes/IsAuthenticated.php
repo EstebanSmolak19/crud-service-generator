@@ -5,6 +5,7 @@ namespace EstebanSmolak19\CrudServiceGenerator\Attributes;
 use Attribute;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ServiceAttributeContract;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 class IsAuthenticated implements ServiceAttributeContract
@@ -15,8 +16,18 @@ class IsAuthenticated implements ServiceAttributeContract
     public function handle(object $service, string $method, array &$params): void
     {
         if (!Auth::check()) {
-            // On bloque tout avant d'arriver au service
-            abort(401, "Authentification requise pour accéder à la méthode : {$method}");
+            throw new HttpResponseException(response()->json([
+                'success' => false,
+                'message' => config('crud-service-generator.messages.unauthorized', 'Non autorisé.'),
+                'error'   => str_replace(
+                    ':method',
+                    $method,
+                    config(
+                        'crud-service-generator.messages.unauthorized_detail',
+                        'Authentification requise pour accéder à la méthode : :method'
+                        )
+                )
+            ], 401));
         }
     }
 }

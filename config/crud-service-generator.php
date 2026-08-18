@@ -86,4 +86,20 @@ return [
     'database' => [
         'table_name_log' => 'crud_service_logs',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Response Messages
+    |--------------------------------------------------------------------------
+    |
+    | Ces messages sont utilisés pour les réponses JSON de l'API lorsqu'une
+    | erreur survient (par exemple, une erreur d'authentification).
+    | Vous pouvez les personnaliser selon vos besoins. Veillez à conserver
+    | le mot-clé ':method' pour que le nom de la méthode reste dynamique.
+    |
+    */
+    'messages' => [
+        'unauthorized' => 'Non autorisé.',
+        'unauthorized_detail' => 'Authentification requise pour accéder à la méthode : :method',
+    ],
 ];
