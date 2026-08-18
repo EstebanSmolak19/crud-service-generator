@@ -88,6 +88,8 @@ class CrudServiceGeneratorCommand extends Command
         // On ne demande le nom de la route QUE si on est en mode complet ("tous")
         $routeName = $isAll ? $this->service->getRouteName($this) : '';
 
+        $isAuthenticated = $isAll ? $this->service->isAuthenticatedRoute($this) : false;
+
         return [
             // Informations générales du service
             'input'               => $input,
@@ -118,6 +120,7 @@ class CrudServiceGeneratorCommand extends Command
 
             // Configuration des Routes
             'routeName'           => strtolower($routeName),
+            'isAuthenticated'   => $isAuthenticated
         ];
     }
 }

@@ -4,7 +4,6 @@ namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 
 class CommandService implements ICommandService
@@ -219,8 +218,19 @@ class CommandService implements ICommandService
     }
 
     /**
-     * Enregistre la route API dans le fichier de routes spécifique au générateur.
-     * Crée le fichier s'il n'existe pas encore.
+     * Demande à l'utilisateur si la route doit être protégée par une authentification.
+     * @param Command $command l'instance de la commande.
+     * @return bool La valeur de la réponse (true pour oui, false pour non)
+     */
+    public function isAuthenticatedRoute(Command $command): bool
+    {
+        return $command->confirm("La route a-t-elle besoin d'être protégée par une authentification (Sanctum) ?", true);
+    }
+
+    /**
+     * Enregistre la route API dans le fichier de routes.
+     * Délègue la manipulation du fichier à la classe RouteRegistrar.
+     *
      * @param Command $command L'instance de la commande.
      * @param array $state L'état global contenant les infos du contrôleur et de la route.
      * @return void
@@ -229,27 +239,29 @@ class CommandService implements ICommandService
     {
         $routePath = base_path('routes/service_generator.php');
 
-        // Initialise le fichier de routes s'il est manquant
-        if (!file_exists($routePath)) {
-            file_put_contents($routePath, "<?php\n\nuse Illuminate\Support\Facades\Route;\n\n");
+        $registrar = new RouteRegister($routePath);
+
+        $registrar->prepare($state);
+
+        //Si la route existe déjà, on quitte
+        if ($registrar->routeExists()) {
+            return;
         }
 
-        // Formate l'URI de la route (ex: user_profiles devient user-profiles) et la passe au pluriel
-        $slug = Str::plural(Str::kebab($state['routeName']));
-        $controllerFQN = "\\" . $state['controllerNamespace'] . "\\" . $state['controllerName'];
+        $isAuth = $state['isAuthenticated'] ?? false;
 
-        $routeLine = "Route::apiResource('{$slug}', {$controllerFQN}::class);\n";
-
-        // Ajoute la route uniquement si elle n'a pas déjà été déclarée pour ce contrôleur
-        $currentContent = file_get_contents($routePath);
-        if (!str_contains($currentContent, $controllerFQN)) {
-            file_put_contents($routePath, $routeLine, FILE_APPEND);
-        }
+        $registrar
+            ->when($isAuth, function ($reg) {
+                $reg->registerProtected();
+            })
+            ->unless($isAuth, function ($reg) {
+                $reg->registerPublic();
+            })
+            ->save();
     }
 
     /**
      * Retourne le nom du fichier de configuration du package.
-     *
      * @return string
      */
     public function getConfigName(): string

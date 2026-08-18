@@ -57,4 +57,11 @@ interface ICommandService
      * Retourne le nom de la route CRUD.
      */
     public function getRouteName(Command $command): string;
+
+    /**
+     * Demande à l'utilisateur si la route doit être protégée par une authentification.
+     * @param Command $command l'instance de la commande.
+     * @return bool La valeur de la réponse (true pour oui, false pour non)
+     */
+    public function isAuthenticatedRoute(Command $command): bool;
 }
