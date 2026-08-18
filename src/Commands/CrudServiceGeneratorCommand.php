@@ -21,6 +21,7 @@ class CrudServiceGeneratorCommand extends Command
      * Exécute la commande de la console.
      * Cette méthode orchestre l'interaction utilisateur, la vérification
      * des conflits de fichiers, puis délègue la génération.
+     *
      * @return int Code de statut de la commande (0 pour succès, 1 pour échec).
      */
     public function handle()
@@ -61,7 +62,8 @@ class CrudServiceGeneratorCommand extends Command
     /**
      * Rassemble et prépare toutes les métadonnées (chemins, namespaces, flags)
      * nécessaires à la génération des stubs.
-     * @param string $selection Le mode choisi par l'utilisateur ('service', 'controllers', etc.)
+     *
+     * @param  string  $selection  Le mode choisi par l'utilisateur ('service', 'controllers', etc.)
      * @return array<string, mixed> Tableau associatif contenant l'état de configuration complet.
      */
     private function gatherState(string $selection): array
@@ -79,7 +81,7 @@ class CrudServiceGeneratorCommand extends Command
         $crud = $isAll || $isCrudOnly;
 
         // Récupération de la configuration et formatage des noms de base
-        $configPath = config($this->service->getConfigName() . '.path', 'app/Services');
+        $configPath = config($this->service->getConfigName().'.path', 'app/Services');
         $className = basename($input);
 
         // On ne génère le nom du contrôleur que si le mode l'exige
@@ -92,35 +94,35 @@ class CrudServiceGeneratorCommand extends Command
 
         return [
             // Informations générales du service
-            'input'               => $input,
-            'className'           => $className,
-            'namespace'           => $this->service->determineNamespace($input, $configPath),
-            'path'                => base_path($configPath . "/{$input}.php"),
-            'serviceNamespace'    => $this->service->determineNamespace($input, $configPath),
-            'baseNamespace'       => 'EstebanSmolak19\\CrudServiceGenerator\\CrudServiceBase',
+            'input' => $input,
+            'className' => $className,
+            'namespace' => $this->service->determineNamespace($input, $configPath),
+            'path' => base_path($configPath."/{$input}.php"),
+            'serviceNamespace' => $this->service->determineNamespace($input, $configPath),
+            'baseNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\CrudServiceBase',
 
             // Flags de génération
-            'crud'                => $crud,
-            'controller'          => $controller,
-            'all_mode'            => $isAll,
+            'crud' => $crud,
+            'controller' => $controller,
+            'all_mode' => $isAll,
 
             // Configuration spécifique (suffixes, typage strict, etc.)
-            'suffix'              => config($this->service->getConfigName() . '.method_suffix', 'Async'),
-            'useStrict'           => config($this->service->getConfigName() . '.strict_types', true),
+            'suffix' => config($this->service->getConfigName().'.method_suffix', 'Async'),
+            'useStrict' => config($this->service->getConfigName().'.strict_types', true),
 
             // Configuration du Modèle (interaction CLI déclenchée si CRUD est actif)
-            'model'               => $crud ? $this->service->interactModelCli($this) : null,
-            'modelNamespace'      => 'App\\Models',
+            'model' => $crud ? $this->service->interactModelCli($this) : null,
+            'modelNamespace' => 'App\\Models',
 
             // Configuration du Contrôleur
-            'controllerName'          => $controllerName,
-            'controllerNamespace'     => 'App\\Http\\Controllers',
-            'controllerPath'          => app_path("Http/Controllers/{$controllerName}.php"),
+            'controllerName' => $controllerName,
+            'controllerNamespace' => 'App\\Http\\Controllers',
+            'controllerPath' => app_path("Http/Controllers/{$controllerName}.php"),
             'baseControllerNamespace' => 'EstebanSmolak19\\CrudServiceGenerator\\Controllers\\CrudControllerBase',
 
             // Configuration des Routes
-            'routeName'           => strtolower($routeName),
-            'isAuthenticated'   => $isAuthenticated
+            'routeName' => strtolower($routeName),
+            'isAuthenticated' => $isAuthenticated,
         ];
     }
 }

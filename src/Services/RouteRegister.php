@@ -10,7 +10,9 @@ class RouteRegister
     use Conditionable;
 
     private string $currentContent;
+
     private string $controllerFQN;
+
     private string $slug;
 
     public function __construct(private string $routePath)
@@ -21,12 +23,13 @@ class RouteRegister
 
     /**
      * Initialise les variables nécessaires à la création de la route.
-     * @param array $state L'état global généré par la commande.
+     *
+     * @param  array  $state  L'état global généré par la commande.
      */
     public function prepare(array $state): self
     {
         $this->slug = Str::plural(Str::kebab($state['routeName']));
-        $this->controllerFQN = "\\" . $state['controllerNamespace'] . "\\" . $state['controllerName'];
+        $this->controllerFQN = '\\'.$state['controllerNamespace'].'\\'.$state['controllerName'];
 
         return $this;
     }
@@ -48,7 +51,7 @@ class RouteRegister
 
         if (str_contains($this->currentContent, '// <public_routes>')) {
             $this->currentContent = str_replace(
-                "// <public_routes>",
+                '// <public_routes>',
                 "{$routeLine}// <public_routes>",
                 $this->currentContent
             );
@@ -68,7 +71,7 @@ class RouteRegister
 
         if (str_contains($this->currentContent, '// <protected_routes>')) {
             $this->currentContent = str_replace(
-                "// <protected_routes>",
+                '// <protected_routes>',
                 "{$routeLine}    // <protected_routes>",
                 $this->currentContent
             );

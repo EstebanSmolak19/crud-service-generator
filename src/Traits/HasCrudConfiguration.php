@@ -15,20 +15,19 @@ trait HasCrudConfiguration
 {
     /**
      * L'instance du modèle Eloquent lié au service.
-     * * @var Model
      */
     protected Model $model;
 
     /**
      * La clé primaire utilisée dans la vue SQL ou le modèle.
      * Par défaut 'id'.
-     * @var string
      */
     protected string $primaryKey = 'id';
 
     /**
      * La classe Resource utilisée pour transformer les données en sortie (API).
      * Par défaut, utilise la BaseResource du package.
+     *
      * * @var string|BaseResource
      */
     protected string $ressource = BaseResource::class;
@@ -36,26 +35,24 @@ trait HasCrudConfiguration
     /**
      * Liste des colonnes autorisées dans la réponse.
      * Si vide, les champs seront extraits dynamiquement.
-     * * @var array
      */
     protected array $fillable;
 
     /**
      * Nombre d'éléments affichés par page.
-     * * @var int
      */
     protected int $perPage;
 
     /**
      * Active ou désactive le journal d'audit (Logs) pour ce service.
      * Si true, chaque action (create, update, delete) sera enregistrée en base (table du package).
-     * * @var bool
      */
     protected bool $audit = false;
 
     /**
      * Configuration du tri par défaut des résultats.
      * Format : ['nom_colonne' => 'ASC' ou 'DESC']
+     *
      * * @var array<string, string>
      */
     protected array $orderBy = ['created_at' => 'DESC'];
@@ -63,31 +60,28 @@ trait HasCrudConfiguration
     /**
      * Nom de la procédure SQL pour la création d'un enregistrement.
      * Si rempli, ignore Eloquent pour le CREATE.
-     * @var string|null
      */
     protected ?string $sqlCreateProcedure = null;
 
     /**
      * Nom de la procédure SQL pour la mise à jour d'un enregistrement.
-     * @var string|null
      */
     protected ?string $sqlUpdateProcedure = null;
 
     /**
      * Nom de la procédure SQL pour la suppression (ID en paramètre).
-     * @var string|null
      */
     protected ?string $sqlDeleteProcedure = null;
 
     /**
      * Nom de la vue SQL utilisée pour les listes et la récupération (Lecture seule).
-     * @var string|null
      */
     protected ?string $sqlViewName = null;
 
     /**
      * Mapping des codes d'erreurs SQL vers des messages lisibles.
      * Exemple : ['ERR_INSUFFICIENT_FUNDS' => 'Solde insuffisant.']
+     *
      * @var array<string, string>
      */
     protected array $sqlErrorMappings = [];

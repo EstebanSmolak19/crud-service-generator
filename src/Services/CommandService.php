@@ -10,15 +10,17 @@ class CommandService implements ICommandService
 {
     /**
      * Récupère la liste des colonnes à exclure lors de la génération des champs.
-     * @var array
      */
     public array $excludedColumns {
-        get { return array_merge(config('crud-service-generator.models.excluded_columns', [])); }
+        get {
+            return array_merge(config('crud-service-generator.models.excluded_columns', []));
+        }
     }
 
     /**
      * Demande ou récupère le nom du service cible.
-     * @param Command $command L'instance de la commande en cours d'exécution.
+     *
+     * @param  Command  $command  L'instance de la commande en cours d'exécution.
      * @return string Le nom du service saisi par l'utilisateur.
      */
     public function getServiceName(Command $command): string
@@ -26,10 +28,10 @@ class CommandService implements ICommandService
         $name = $command->argument('name');
 
         // On boucle tant que l'utilisateur n'a pas fourni de nom valide
-        while (!$name) {
+        while (! $name) {
             $name = $command->ask('Quel est le nom de votre service ? (Ex. UserService)');
 
-            if (!$name) {
+            if (! $name) {
                 $command->warn('Le nom du service est obligatoire.');
             }
         }
@@ -39,8 +41,9 @@ class CommandService implements ICommandService
 
     /**
      * Génération de tous les composants demandés.
-     * @param Command $command L'instance de la commande.
-     * @param array $state L'état global de la configuration généré par la commande.
+     *
+     * @param  Command  $command  L'instance de la commande.
+     * @param  array  $state  L'état global de la configuration généré par la commande.
      * @return int Code de retour de la commande (Command::SUCCESS).
      */
     public function generate(Command $command, array $state): int
@@ -49,7 +52,7 @@ class CommandService implements ICommandService
         // On choisit le stub selon que le mode CRUD a été demandé ou non
         $this->generateFileFromStub(
             $state['path'],
-            $state['crud'] ? __DIR__ . '/../stubs/CrudService.stub' : __DIR__ . '/../stubs/Service.stub',
+            $state['crud'] ? __DIR__.'/../stubs/CrudService.stub' : __DIR__.'/../stubs/Service.stub',
             $state
         );
 
@@ -57,8 +60,8 @@ class CommandService implements ICommandService
         if ($state['controller']) {
             // Sélection du stub : complet (avec méthodes CRUD) ou simple
             $controllerStub = ($state['all_mode'] ?? false)
-                ? __DIR__ . '/../stubs/Controller.stub'
-                : __DIR__ . '/../stubs/ControllerSimple.stub';
+                ? __DIR__.'/../stubs/Controller.stub'
+                : __DIR__.'/../stubs/ControllerSimple.stub';
 
             $this->generateFileFromStub($state['controllerPath'], $controllerStub, $state);
 
@@ -68,26 +71,29 @@ class CommandService implements ICommandService
             }
         }
 
-        $command->info("✅ Composants générés avec succès !");
+        $command->info('✅ Composants générés avec succès !');
+
         return Command::SUCCESS;
     }
 
     /**
      * Génère un fichier à partir d'un fichier "stub"
      * Remplace les variables dynamiques ({{ class }}, {{ namespace }}...) par les valeurs réelles.
-     * @param string $path Chemin absolu où le fichier doit être créé.
-     * @param string $stubPath Chemin absolu vers le fichier stub source.
-     * @param array $state Données de configuration pour le remplacement.
-     * @return void
+     *
+     * @param  string  $path  Chemin absolu où le fichier doit être créé.
+     * @param  string  $stubPath  Chemin absolu vers le fichier stub source.
+     * @param  array  $state  Données de configuration pour le remplacement.
      */
     private function generateFileFromStub(string $path, string $stubPath, array $state): void
     {
         // Crée les dossiers parents s'ils n'existent pas encore
-        if (!file_exists(dirname($path))) {
+        if (! file_exists(dirname($path))) {
             mkdir(dirname($path), 0755, true);
         }
 
-        if (!file_exists($stubPath)) return;
+        if (! file_exists($stubPath)) {
+            return;
+        }
 
         $content = file_get_contents($stubPath);
 
@@ -97,20 +103,20 @@ class CommandService implements ICommandService
         }
 
         // Si on est en mode CRUD, on pré-remplit les champs de la ressource en lisant la base de données
-        $fields = "";
+        $fields = '';
         if (isset($state['model'])) {
-            $modelClass = "App\\Models\\" . $state['model'];
+            $modelClass = 'App\\Models\\'.$state['model'];
 
             // On vérifie que la classe existe et que la table correspondante est migrée
             if (class_exists($modelClass)) {
-                $modelInstance = new $modelClass();
+                $modelInstance = new $modelClass;
                 $tableName = $modelInstance->getTable();
 
                 if (Schema::hasTable($tableName)) {
                     $allColumns = Schema::getColumnListing($tableName);
                     foreach ($allColumns as $col) {
                         // On ignore les colonnes configurées (ex: id, created_at, etc.)
-                        if (!in_array($col, $this->excludedColumns)) {
+                        if (! in_array($col, $this->excludedColumns)) {
                             $fields .= "            '{$col}' => \$this->{$col},\n";
                         }
                     }
@@ -124,13 +130,13 @@ class CommandService implements ICommandService
                 '{{ class }}', '{{ className }}', '{{ namespace }}', '{{ suffix }}',
                 '{{ baseNamespace }}', '{{ modelNamespace }}', '{{ model }}', '{{ fields }}',
                 '{{ controllerName }}', '{{ controllerNamespace }}', '{{ serviceNamespace }}',
-                '{{ baseControllerNamespace }}', '{{ serviceClass }}'
+                '{{ baseControllerNamespace }}', '{{ serviceClass }}',
             ],
             [
                 $state['className'], $state['className'], $state['namespace'], $state['suffix'],
                 $state['baseNamespace'], $state['modelNamespace'], $state['model'] ?? '', trim($fields),
                 $state['controllerName'], $state['controllerNamespace'], $state['serviceNamespace'],
-                $state['baseControllerNamespace'], $state['className']
+                $state['baseControllerNamespace'], $state['className'],
             ],
             $content
         );
@@ -141,21 +147,22 @@ class CommandService implements ICommandService
 
     /**
      * Demande à l'utilisateur le nom du modèle associé et le crée s'il n'existe pas.
-     * @param Command $command L'instance de la commande.
+     *
+     * @param  Command  $command  L'instance de la commande.
      * @return string Le nom du modèle.
      */
     public function interactModelCli(Command $command): string
     {
         $model = $command->ask('Quel est le modèle associé ? (Ex. User)');
 
-        while (!$model) {
+        while (! $model) {
             $model = $command->ask('Le nom du modèle est obligatoire :');
         }
 
-        $modelPath = app_path('Models/' . $model . '.php');
+        $modelPath = app_path('Models/'.$model.'.php');
 
         // Si le modèle n'existe pas, on appelle la commande native de Laravel pour le créer
-        if (!file_exists($modelPath)) {
+        if (! file_exists($modelPath)) {
             $command->info("Le modèle {$model} n'existe pas, création en cours...");
             $command->callSilent('make:model', ['name' => $model]);
         }
@@ -165,8 +172,9 @@ class CommandService implements ICommandService
 
     /**
      * Détermine le namespace final d'une classe en fonction de son dossier de destination.
-     * @param string $input Le nom saisi (peut inclure des sous-dossiers, ex: Admin/UserService)
-     * @param string $configPath Le chemin de base depuis la config (ex: app/Services)
+     *
+     * @param  string  $input  Le nom saisi (peut inclure des sous-dossiers, ex: Admin/UserService)
+     * @param  string  $configPath  Le chemin de base depuis la config (ex: app/Services)
      * @return string Le namespace formaté (ex: App\Services\Admin)
      */
     public function determineNamespace(string $input, string $configPath): string
@@ -181,7 +189,7 @@ class CommandService implements ICommandService
 
         // Si le service est dans un sous-dossier, on l'ajoute au namespace
         if ($subDir !== '.') {
-            $namespace .= "\\" . str_replace(['/', '|', ':'], "\\", $subDir);
+            $namespace .= '\\'.str_replace(['/', '|', ':'], '\\', $subDir);
         }
 
         return $namespace;
@@ -189,37 +197,44 @@ class CommandService implements ICommandService
 
     /**
      * Demande le nom du contrôleur à générer.
-     * @param Command $command L'instance de la commande.
+     *
+     * @param  Command  $command  L'instance de la commande.
      * @return string Le nom du contrôleur.
      */
     public function getControllerName(Command $command): string
     {
         do {
             $name = $command->ask('Quel est le nom de votre controller ? (Ex. UserController)');
-            if (!$name) $command->warn('Le nom du controller est obligatoire');
-        } while (!$name);
+            if (! $name) {
+                $command->warn('Le nom du controller est obligatoire');
+            }
+        } while (! $name);
 
         return $name;
     }
 
     /**
      * Demande le nom de la route API associée.
-     * @param Command $command L'instance de la commande.
+     *
+     * @param  Command  $command  L'instance de la commande.
      * @return string Le nom de la route.
      */
     public function getRouteName(Command $command): string
     {
         do {
             $routeName = $command->ask('Quel est le nom de la route associée ? (Ex. users)');
-            if (!$routeName) $command->warn('Le nom de la route est obligatoire');
-        } while (!$routeName);
+            if (! $routeName) {
+                $command->warn('Le nom de la route est obligatoire');
+            }
+        } while (! $routeName);
 
         return $routeName;
     }
 
     /**
      * Demande à l'utilisateur si la route doit être protégée par une authentification.
-     * @param Command $command l'instance de la commande.
+     *
+     * @param  Command  $command  l'instance de la commande.
      * @return bool La valeur de la réponse (true pour oui, false pour non)
      */
     public function isAuthenticatedRoute(Command $command): bool
@@ -231,9 +246,8 @@ class CommandService implements ICommandService
      * Enregistre la route API dans le fichier de routes.
      * Délègue la manipulation du fichier à la classe RouteRegistrar.
      *
-     * @param Command $command L'instance de la commande.
-     * @param array $state L'état global contenant les infos du contrôleur et de la route.
-     * @return void
+     * @param  Command  $command  L'instance de la commande.
+     * @param  array  $state  L'état global contenant les infos du contrôleur et de la route.
      */
     private function registerRoute(Command $command, array $state): void
     {
@@ -243,7 +257,7 @@ class CommandService implements ICommandService
 
         $registrar->prepare($state);
 
-        //Si la route existe déjà, on quitte
+        // Si la route existe déjà, on quitte
         if ($registrar->routeExists()) {
             return;
         }
@@ -262,7 +276,6 @@ class CommandService implements ICommandService
 
     /**
      * Retourne le nom du fichier de configuration du package.
-     * @return string
      */
     public function getConfigName(): string
     {
