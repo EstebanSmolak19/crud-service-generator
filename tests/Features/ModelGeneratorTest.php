@@ -57,7 +57,7 @@ describe('ModelService', function () {
                 [
                     'columns' => ['parent_table_id'],
                     'foreign_table' => 'parent_tables',
-                ]
+                ],
             ]);
         });
 
@@ -75,7 +75,7 @@ describe('ModelService', function () {
         $this->partialMock(ModelService::class, function ($mock) {
             $mock->shouldReceive('searchTable')->andReturn([
                 ['name' => 'parent_tables'],
-                ['name' => 'child_tables']
+                ['name' => 'child_tables'],
             ]);
             $mock->shouldReceive('getTableColumns')->andReturn(['id']);
             $mock->shouldReceive('getPrimaryKey')->andReturn('id');
@@ -85,7 +85,7 @@ describe('ModelService', function () {
                 [
                     'columns' => ['parent_table_id'],
                     'foreign_table' => 'parent_tables',
-                ]
+                ],
             ]);
         });
 
@@ -138,7 +138,7 @@ describe('ModelService', function () {
     });
 
     it('respecte le modèle utilisateur existant', function () {
-        File::put(app_path('Models/GenericModel.php'), "<?php // CLASS CUSTOM");
+        File::put(app_path('Models/GenericModel.php'), '<?php // CLASS CUSTOM');
 
         $this->partialMock(ModelService::class, function ($mock) {
             $mock->shouldReceive('searchTable')->andReturn([['name' => 'generic_models']]);

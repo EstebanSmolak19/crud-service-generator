@@ -7,7 +7,7 @@ interface IModelService
     public array $whitelist { get; }
 
     public array $excludedColumns { get; }
-    
+
     /**
      * Recherches toutes les bases de la base de donnée.
      */

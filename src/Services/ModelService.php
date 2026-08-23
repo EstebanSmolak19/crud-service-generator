@@ -11,7 +11,6 @@ class ModelService implements IModelService
 {
     /**
      * Liste des tables à exclure lors de la génération des modèles.
-     * @var array
      */
     public array $whitelist {
         get {
@@ -22,7 +21,6 @@ class ModelService implements IModelService
     /**
      * Liste des colonnes à exclure systématiquement de la propriété $fillable
      * des modèles générés (ex: id, created_at, updated_at).
-     * @var array
      */
     public array $excludedColumns {
         get {
@@ -32,6 +30,7 @@ class ModelService implements IModelService
 
     /**
      * Récupère et filtre la liste des tables de la base de données actuelle.
+     *
      * @return array Liste des tables valides pour la génération.
      */
     public function searchTable(): array
@@ -51,7 +50,6 @@ class ModelService implements IModelService
      * Point d'entrée principal. Déclenche la création des dossiers,
      * itère sur toutes les tables valides et génère les modèles correspondants.
      * Gère également le masquage des fichiers de base dans VSCode si configuré.
-     * @return void
      */
     public function generateModels(): void
     {
@@ -70,15 +68,14 @@ class ModelService implements IModelService
     /**
      * Met à jour le fichier .vscode/settings.json du projet pour masquer ou afficher
      * le dossier `app/Generated/Models` dans l'explorateur de fichiers de l'éditeur.
-     * @return void
      */
     public function hideBaseModelsInVsCode(): void
     {
         $settingsPath = base_path('.vscode/settings.json');
         $configValue = config('crud-service-generator.models.hide_base_models_in_vscode', true);
 
-        if (!File::exists($settingsPath)) {
-            if (!$configValue) {
+        if (! File::exists($settingsPath)) {
+            if (! $configValue) {
                 return;
             }
             File::makeDirectory(base_path('.vscode'), 0777, true, true);
@@ -102,7 +99,7 @@ class ModelService implements IModelService
             }
         }
 
-        if (!empty($settings) || File::exists($settingsPath)) {
+        if (! empty($settings) || File::exists($settingsPath)) {
             File::put(
                 $settingsPath,
                 json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
@@ -113,7 +110,6 @@ class ModelService implements IModelService
     /**
      * S'assure que les répertoires de destination pour les modèles
      * (Modeles utilisateurs et Modèles générés) existent sur le système de fichiers.
-     * @return void
      */
     private function ensureDirectoriesExist(): void
     {
@@ -123,7 +119,7 @@ class ModelService implements IModelService
         ];
 
         foreach ($directories as $directory) {
-            if (!File::isDirectory($directory)) {
+            if (! File::isDirectory($directory)) {
                 File::makeDirectory($directory, 0777, true);
             }
         }
@@ -131,9 +127,9 @@ class ModelService implements IModelService
 
     /**
      * Génération d'un modèle pour une table spécifique.
-     * @param array $table Les métadonnées de la table courante.
-     * @param array $allTables L'ensemble des tables
-     * @return void
+     *
+     * @param  array  $table  Les métadonnées de la table courante.
+     * @param  array  $allTables  L'ensemble des tables
      */
     private function generateSingleModel(array $table, array $allTables): void
     {
@@ -154,8 +150,9 @@ class ModelService implements IModelService
 
     /**
      * Prépare toutes les variables dynamiques (clés primaires, colonnes, imports, relations)
-     * @param string $tableName Nom de la table dans la base de données.
-     * @param array  $allTables Ensemble des tables pour l'analyse des relations.
+     *
+     * @param  string  $tableName  Nom de la table dans la base de données.
+     * @param  array  $allTables  Ensemble des tables pour l'analyse des relations.
      * @return array Tableau associatif contenant les chaînes formatées pour le stub.
      */
     private function prepareModelData(string $tableName, array $allTables): array
@@ -177,11 +174,11 @@ class ModelService implements IModelService
 
     /**
      * Écrit le fichier du modèle de base dans le dossier Generated.
-     * @param string $className   Nom de la classe (ex: User).
-     * @param string $tableName   Nom de la table (ex: users).
-     * @param array  $data        Données préparées pour le remplacement.
-     * @param string $stubContent Contenu original du fichier stub.
-     * @return void
+     *
+     * @param  string  $className  Nom de la classe (ex: User).
+     * @param  string  $tableName  Nom de la table (ex: users).
+     * @param  array  $data  Données préparées pour le remplacement.
+     * @param  string  $stubContent  Contenu original du fichier stub.
      */
     private function writeBaseModel(string $className, string $tableName, array $data, string $stubContent): void
     {
@@ -200,8 +197,8 @@ class ModelService implements IModelService
      * Écrit le fichier du modèle utilisateur dans le dossier app/Models.
      * Ce fichier n'est généré que s'il n'existe pas déjà, pour ne pas écraser
      * la logique personnalisée
-     * @param string $className Nom de la classe du modèle.
-     * @return void
+     *
+     * @param  string  $className  Nom de la classe du modèle.
      */
     private function writeUserModel(string $className): void
     {
@@ -216,9 +213,10 @@ class ModelService implements IModelService
     /**
      * Chef d'orchestre de la génération des relations du modèle.
      * Concatène les résultats de BelongsTo, HasMany et BelongsToMany.
-     * @param string $currentTable Nom de la table en cours d'analyse.
-     * @param array  $allTables    Ensemble des tables de la BDD.
-     * @param array  &$imports     Tableau passé par référence pour collecter les classes à importer (use).
+     *
+     * @param  string  $currentTable  Nom de la table en cours d'analyse.
+     * @param  array  $allTables  Ensemble des tables de la BDD.
+     * @param  array  &$imports  Tableau passé par référence pour collecter les classes à importer (use).
      * @return string Le code source PHP de toutes les méthodes de relation générées.
      */
     private function generateAllRelations(string $currentTable, array $allTables, array &$imports): string
@@ -235,8 +233,9 @@ class ModelService implements IModelService
     /**
      * Génère les méthodes de relation BelongsTo.
      * Analyse les clés étrangères physiquement présentes dans la table courante.
-     * @param string $currentTable Nom de la table courante.
-     * @param array  &$imports     Tableau de collecte des namespaces à importer.
+     *
+     * @param  string  $currentTable  Nom de la table courante.
+     * @param  array  &$imports  Tableau de collecte des namespaces à importer.
      * @return string Code source des méthodes BelongsTo générées.
      */
     private function generateBelongsTo(string $currentTable, array &$imports): string
@@ -265,9 +264,10 @@ class ModelService implements IModelService
      * Génère les méthodes de relation HasMany.
      * Recherche dans les autres tables celles qui possèdent une clé étrangère
      * pointant vers la table courante (en excluant les tables pivots pures).
-     * @param string $currentTable Nom de la table courante.
-     * @param array  $allTables    Ensemble des tables de la BDD.
-     * @param array  &$imports     Tableau de collecte des namespaces à importer.
+     *
+     * @param  string  $currentTable  Nom de la table courante.
+     * @param  array  $allTables  Ensemble des tables de la BDD.
+     * @param  array  &$imports  Tableau de collecte des namespaces à importer.
      * @return string Code source des méthodes HasMany générées.
      */
     private function generateHasMany(string $currentTable, array $allTables, array &$imports): string
@@ -312,9 +312,10 @@ class ModelService implements IModelService
     /**
      * Génère les méthodes de relation BelongsToMany (Relations N à N).
      * Identifie les tables pivots
-     * @param string $currentTable Nom de la table courante.
-     * @param array  $allTables    Ensemble des tables de la BDD pour détecter les pivots.
-     * @param array  &$imports     Tableau de collecte des namespaces à importer.
+     *
+     * @param  string  $currentTable  Nom de la table courante.
+     * @param  array  $allTables  Ensemble des tables de la BDD pour détecter les pivots.
+     * @param  array  &$imports  Tableau de collecte des namespaces à importer.
      * @return string Code source des méthodes BelongsToMany générées.
      */
     private function generateBelongsToMany(string $currentTable, array $allTables, array &$imports): string
@@ -347,7 +348,7 @@ class ModelService implements IModelService
                     $relatedTableName = $relatedFk['foreign_table'];
 
                     $methodName = Str::camel(Str::plural($relatedTableName));
-                    $relatedModel = '\\App\\Models\\' . Str::studly(Str::singular($relatedTableName));
+                    $relatedModel = '\\App\\Models\\'.Str::studly(Str::singular($relatedTableName));
 
                     $imports[] = "use Illuminate\Database\Eloquent\Relations\BelongsToMany;";
 
@@ -364,7 +365,8 @@ class ModelService implements IModelService
 
     /**
      * Récupère la liste de toutes les colonnes d'une table spécifique.
-     * @param string $table Nom de la table.
+     *
+     * @param  string  $table  Nom de la table.
      * @return array Tableau contenant les noms des colonnes.
      */
     public function getTableColumns(string $table): array
@@ -374,7 +376,8 @@ class ModelService implements IModelService
 
     /**
      * Récupère les métadonnées de toutes les clés étrangères d'une table.
-     * @param string $table Nom de la table.
+     *
+     * @param  string  $table  Nom de la table.
      * @return array Tableau détaillant les clés étrangères (colonnes locales et cibles).
      */
     public function getTableForeignKeys(string $table): array
@@ -384,7 +387,8 @@ class ModelService implements IModelService
 
     /**
      * Identifie le nom de la colonne agissant comme clé primaire pour une table donnée.
-     * @param string $table Nom de la table.
+     *
+     * @param  string  $table  Nom de la table.
      * @return string Nom de la clé primaire (retourne 'id' par défaut).
      */
     public function getPrimaryKey(string $table): string

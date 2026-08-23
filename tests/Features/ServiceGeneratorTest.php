@@ -178,7 +178,7 @@ describe('Génération Complète (--all / tous)', function () {
     });
 
     it("génère l'ensemble des composants avec la route publique", function () {
-        $this->artisan("make:service PublicService")
+        $this->artisan('make:service PublicService')
             ->expectsQuestion('Quels modes choisissez-vous ?', 'tous')
             ->expectsQuestion('Quel est le nom de votre controller ? (Ex. UserController)', 'PublicController')
             ->expectsQuestion('Quel est le nom de la route associée ? (Ex. users)', 'public-route')
