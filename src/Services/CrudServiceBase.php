@@ -6,11 +6,8 @@ use EstebanSmolak19\CrudServiceGenerator\Contracts\HasSqlOverrides;
 use EstebanSmolak19\CrudServiceGenerator\Traits\HasCrudConfiguration;
 use EstebanSmolak19\CrudServiceGenerator\Traits\InteractsWithSql;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Traits\Macroable;
@@ -64,33 +61,7 @@ abstract class CrudServiceBase
 
     public function responseFormat(mixed $data): mixed
     {
-        // On gère les deux types de Builder (Vue SQL QueryBuilder ou Modèle Eloquent Builder)
-        if ($data instanceof Builder || $data instanceof QueryBuilder) {
-            $finalPerPage = $this->getPerPage();
-
-            if ($finalPerPage > 0) {
-                $max = config('crud-service-generator.pagination.max_per_page', 100);
-                $data = $data->paginate(min((int) $finalPerPage, $max));
-            } else {
-                $data = $data->get();
-            }
-        }
-
-        if ($data instanceof LengthAwarePaginator) {
-            return $data->setCollection(
-                $data->getCollection()->map(function ($item) {
-                    return $this->mapToResource($item);
-                })
-            );
-        }
-
-        if ($data instanceof EloquentCollection || $data instanceof SupportCollection) {
-            return $data->map(function ($item) {
-                return $this->mapToResource($item);
-            });
-        }
-
-        return $this->mapToResource($data);
+       return (new ResponseFormatter($data, fn($item) => $this->mapToResource($item), $this->getPerPage()))->format();
     }
 
     public function all(): mixed
@@ -206,6 +177,58 @@ abstract class CrudServiceBase
 
         // Sinon Fallback Eloquent
         return $record->delete();
+    }
+
+    /**
+     * Met à jour plusieurs enregistrements simultanément.
+     * @param array $ids Liste des clés primaires
+     * @param array $data Les données à mettre à jour
+     * @return int Le nombre de lignes affectées
+     */
+    public function bulkUpdate(array $ids, array $data): int
+    {
+        $count = 0;
+        $hasUpdateProcedure = $this instanceof HasSqlOverrides
+            && $this->getUpdateProcedureName()
+            && $this->procedureExists($this->getUpdateProcedureName());
+
+        if($this->audit || $hasUpdateProcedure) {
+            $records = $this->model->whereIn($this->primaryKey ?? 'id', $ids)->get();
+            foreach($records as $record) {
+                $this->update($record->getKey(), $data);
+                $count++;
+            }
+            return $count;
+        }
+
+        return $this->model->whereIn($this->primaryKey ?? 'id', $ids)->update($data);
+    }
+
+    /**
+     * Supprime plusieurs enregistrements simultanément.
+     *
+     * @param array $ids Liste des clés primaires
+     * @return int Le nombre de lignes supprimées
+     */
+    public function bulkDelete(array $ids): int
+    {
+        $count = 0;
+
+        $hasDeleteProcedure = $this instanceof HasSqlOverrides
+            && $this->getDeleteProcedureName()
+            && $this->procedureExists($this->getDeleteProcedureName());
+
+        // Si audit ou procédure SQL, on délègue à ta méthode destroy() ligne par ligne
+        if ($this->audit || $hasDeleteProcedure) {
+            $records = $this->model->whereIn($this->primaryKey ?? 'id', $ids)->get();
+            foreach ($records as $record) {
+                $this->destroy($record->getKey());
+                $count++;
+            }
+            return $count;
+        }
+
+        return $this->model->whereIn($this->primaryKey ?? 'id', $ids)->delete();
     }
 
     /**

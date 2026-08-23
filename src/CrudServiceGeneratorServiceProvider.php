@@ -11,6 +11,7 @@ use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\IModelService;
 use EstebanSmolak19\CrudServiceGenerator\Services\CommandService;
 use EstebanSmolak19\CrudServiceGenerator\Services\ModelService;
+use EstebanSmolak19\CrudServiceGenerator\Services\RouteMacrosRegister;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -32,19 +33,23 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
             ]);
     }
 
-    public function packageBooted()
+    public function packageRegistered(): void
     {
+        $this->app->bind(IModelService::class, ModelService::class);
+        $this->app->bind(ICommandService::class, CommandService::class);
+    }
+
+    public function packageBooted(): void
+    {
+        $router = $this->app['router'];
+
+        //Enregistre les macros.
+        RouteMacrosRegister::register($router);
+
+        // Chargement du fichier de routes
         $routesPath = base_path('routes/service_generator.php');
         if (file_exists($routesPath)) {
             $this->loadRoutesFrom($routesPath);
         }
-    }
-
-    public function register()
-    {
-        parent::register();
-
-        $this->app->bind(IModelService::class, ModelService::class);
-        $this->app->bind(ICommandService::class, CommandService::class);
     }
 }

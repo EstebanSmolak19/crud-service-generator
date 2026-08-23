@@ -2,6 +2,8 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Controllers;
 
+use EstebanSmolak19\CrudServiceGenerator\Enums\BulkActions;
+use EstebanSmolak19\CrudServiceGenerator\Services\BulkActionGuard;
 use EstebanSmolak19\CrudServiceGenerator\Services\ServiceProxy;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -9,6 +11,8 @@ use Illuminate\Routing\Controller;
 class CrudControllerBase extends Controller
 {
     protected $realService;
+    protected array $bulkActions = []; // Tous est fermé par défaut
+    protected ?BulkActionGuard $bulkGuard = null;
 
     public function __construct($service)
     {
@@ -55,6 +59,36 @@ class CrudControllerBase extends Controller
     {
         $this->service->destroy($id);
 
+        return response()->json(null, 204);
+    }
+
+    /**
+     * Initialise et retourne le guard pour ce contrôleur
+    */
+    public function bulk(): BulkActionGuard
+    {
+        if(!$this->bulkGuard) {
+            $this->bulkGuard = new BulkActionGuard($this->bulkActions);
+        }
+        return $this->bulkGuard;
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $this->bulk()->authorize(BulkActions::UPDATE);
+
+        $ids = $request->input('ids', []);
+        $data = $request->except('ids');
+        $result = $this->service->bulkUpdate($ids, $data);
+        return response()->json($result);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $this->bulk()->authorize(BulkActions::DELETE);
+
+        $ids = $request->input('ids', []);
+        $this->service->bulkDelete($ids);
         return response()->json(null, 204);
     }
 }

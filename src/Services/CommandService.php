@@ -223,7 +223,7 @@ class CommandService implements ICommandService
     {
         do {
             $routeName = $command->ask('Quel est le nom de la route associée ? (Ex. users)');
-            if (! $routeName) {
+            if (!$routeName) {
                 $command->warn('Le nom de la route est obligatoire');
             }
         } while (! $routeName);

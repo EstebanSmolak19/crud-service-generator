@@ -12,6 +12,9 @@ use EstebanSmolak19\CrudServiceGenerator\Attributes\IsAuthenticated;
  * Class {{ class }}
  * * Pour personnaliser la configuration (tri, pagination, audit),
  * @see \EstebanSmolak19\CrudServiceGenerator\Traits\HasCrudConfiguration
+
+ * * Pour authoriser les bulkActions
+ * @see \EstebanSmolak19\CrudServiceGenerator\Enums\bulkActions
  */
 class {{ class }} extends CrudServiceBase implements IFillableContract, HasSqlOverrides
 {

@@ -47,7 +47,7 @@ class RouteRegister
      */
     public function registerPublic(): self
     {
-        $routeLine = "Route::apiResource('{$this->slug}', {$this->controllerFQN}::class);\n";
+        $routeLine = "Route::serviceCrudResource('{$this->slug}', {$this->controllerFQN}::class);\n";
 
         if (str_contains($this->currentContent, '// <public_routes>')) {
             $this->currentContent = str_replace(
@@ -67,7 +67,7 @@ class RouteRegister
      */
     public function registerProtected(): self
     {
-        $routeLine = "    Route::apiResource('{$this->slug}', {$this->controllerFQN}::class);\n";
+        $routeLine = "    Route::serviceCrudResource('{$this->slug}', {$this->controllerFQN}::class);\n";
 
         if (str_contains($this->currentContent, '// <protected_routes>')) {
             $this->currentContent = str_replace(
@@ -104,6 +104,7 @@ class RouteRegister
 
             use Illuminate\Support\Facades\Route;
             use EstebanSmolak19\CrudServiceGenerator\Middlewares\ForceJsonResponse;
+
 
             // --- Routes Publiques ---
             // <public_routes>

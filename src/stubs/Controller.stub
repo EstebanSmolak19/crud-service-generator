@@ -5,8 +5,14 @@ namespace {{ controllerNamespace }};
 use {{ serviceNamespace }}\{{ serviceClass }};
 use EstebanSmolak19\CrudServiceGenerator\Controllers\CrudControllerBase;
 
+/**
+ * Pour authoriser les bulkActions
+ * @see \EstebanSmolak19\CrudServiceGenerator\Enums\bulkActions
+*/
 class {{ controllerName }} extends CrudControllerBase
 {
+    protected array $bulkActions = [];
+
     public function __construct({{ serviceClass }} $service)
     {
         parent::__construct($service);
