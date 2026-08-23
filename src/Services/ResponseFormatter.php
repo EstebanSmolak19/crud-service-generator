@@ -2,12 +2,12 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Services;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Traits\Conditionable;
-use Closure;
 
 class ResponseFormatter
 {
@@ -23,14 +23,14 @@ class ResponseFormatter
 
     public function format(): mixed
     {
-        //Résolution de la requête : si c'est un Builder, on exécute la requête
+        // Résolution de la requête : si c'est un Builder, on exécute la requête
         $this->when($this->data instanceof Builder || $this->data instanceof QueryBuilder, function ($self) {
             $self->data = $self->perPage > 0
                 ? $self->data->paginate(min($self->perPage, config('crud-service-generator.pagination.max_per_page', 100)))
                 : $self->data->get();
         });
 
-        //Formatage selon le type de donnée final
+        // Formatage selon le type de donnée final
         $this
             ->when(is_scalar($this->data) || is_null($this->data), function ($self) {
                 $self->result = ['affected_rows' => $self->data];

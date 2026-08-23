@@ -61,7 +61,7 @@ abstract class CrudServiceBase
 
     public function responseFormat(mixed $data): mixed
     {
-       return (new ResponseFormatter($data, fn($item) => $this->mapToResource($item), $this->getPerPage()))->format();
+        return (new ResponseFormatter($data, fn ($item) => $this->mapToResource($item), $this->getPerPage()))->format();
     }
 
     public function all(): mixed
@@ -181,8 +181,9 @@ abstract class CrudServiceBase
 
     /**
      * Met à jour plusieurs enregistrements simultanément.
-     * @param array $ids Liste des clés primaires
-     * @param array $data Les données à mettre à jour
+     *
+     * @param  array  $ids  Liste des clés primaires
+     * @param  array  $data  Les données à mettre à jour
      * @return int Le nombre de lignes affectées
      */
     public function bulkUpdate(array $ids, array $data): int
@@ -192,12 +193,13 @@ abstract class CrudServiceBase
             && $this->getUpdateProcedureName()
             && $this->procedureExists($this->getUpdateProcedureName());
 
-        if($this->audit || $hasUpdateProcedure) {
+        if ($this->audit || $hasUpdateProcedure) {
             $records = $this->model->whereIn($this->primaryKey ?? 'id', $ids)->get();
-            foreach($records as $record) {
+            foreach ($records as $record) {
                 $this->update($record->getKey(), $data);
                 $count++;
             }
+
             return $count;
         }
 
@@ -207,7 +209,7 @@ abstract class CrudServiceBase
     /**
      * Supprime plusieurs enregistrements simultanément.
      *
-     * @param array $ids Liste des clés primaires
+     * @param  array  $ids  Liste des clés primaires
      * @return int Le nombre de lignes supprimées
      */
     public function bulkDelete(array $ids): int
@@ -225,6 +227,7 @@ abstract class CrudServiceBase
                 $this->destroy($record->getKey());
                 $count++;
             }
+
             return $count;
         }
 
