@@ -45,6 +45,7 @@ return [
             'cache', 'cache_locks', 'failed_jobs',
             'job_batches', 'jobs', 'migrations',
             'password_reset_tokens', 'sessions',
+            'personal_access_tokens',
             config('crud-service-generator.database.table_name_log'),
         ],
 
