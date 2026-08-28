@@ -11,7 +11,9 @@ use Illuminate\Routing\Controller;
 class CrudControllerBase extends Controller
 {
     protected $realService;
+
     protected array $bulkActions = []; // Tous est fermé par défaut
+
     protected ?BulkActionGuard $bulkGuard = null;
 
     public function __construct($service)
@@ -64,12 +66,13 @@ class CrudControllerBase extends Controller
 
     /**
      * Initialise et retourne le guard pour ce contrôleur
-    */
+     */
     public function bulk(): BulkActionGuard
     {
-        if(!$this->bulkGuard) {
+        if (! $this->bulkGuard) {
             $this->bulkGuard = new BulkActionGuard($this->bulkActions);
         }
+
         return $this->bulkGuard;
     }
 
@@ -80,6 +83,7 @@ class CrudControllerBase extends Controller
         $ids = $request->input('ids', []);
         $data = $request->except('ids');
         $result = $this->service->bulkUpdate($ids, $data);
+
         return response()->json($result);
     }
 
@@ -89,6 +93,7 @@ class CrudControllerBase extends Controller
 
         $ids = $request->input('ids', []);
         $this->service->bulkDelete($ids);
+
         return response()->json(null, 204);
     }
 }

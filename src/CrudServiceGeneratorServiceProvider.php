@@ -45,7 +45,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
     {
         $router = $this->app['router'];
 
-        //Enregistre les macros.
+        // Enregistre les macros.
         RouteMacrosRegister::register($router);
 
         // Chargement du fichier de routes
