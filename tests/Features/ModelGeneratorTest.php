@@ -151,4 +151,70 @@ describe('ModelService', function () {
 
         expect(File::get(app_path('Models/GenericModel.php')))->toContain('// CLASS CUSTOM');
     });
+
+    it('inclut le trait HasUuids et son import lorsque use_uuids est activé dans la config', function () {
+        config(['crud-service-generator.use_uuids' => true]);
+        config(['crud-service-generator.models.whitelist' => []]);
+
+        $this->partialMock(ModelService::class, function ($mock) {
+            $mock->shouldReceive('searchTable')->andReturn([['name' => 'entities']]);
+            $mock->shouldReceive('getTableColumns')->andReturn(['id', 'name']);
+            $mock->shouldReceive('getPrimaryKey')->andReturn('id');
+            $mock->shouldReceive('getTableForeignKeys')->andReturn([]);
+        });
+
+        $this->artisan('generate:model')->assertExitCode(0);
+
+        $generatedContent = File::get(app_path('Generated/Models/Entity.php'));
+
+        expect($generatedContent)
+            ->toContain('use Illuminate\Database\Eloquent\Concerns\HasUuids;')
+            ->toContain('use HasUuids;');
+    });
+
+    it('n inclut pas le trait HasUuids lorsque use_uuids est désactivé dans la config', function () {
+        config(['crud-service-generator.use_uuids' => false]);
+        config(['crud-service-generator.models.whitelist' => []]);
+
+        $this->partialMock(ModelService::class, function ($mock) {
+            $mock->shouldReceive('searchTable')->andReturn([['name' => 'entities']]);
+            $mock->shouldReceive('getTableColumns')->andReturn(['id', 'name']);
+            $mock->shouldReceive('getPrimaryKey')->andReturn('id');
+            $mock->shouldReceive('getTableForeignKeys')->andReturn([]);
+        });
+
+        $this->artisan('generate:model')->assertExitCode(0);
+
+        $generatedContent = File::get(app_path('Generated/Models/Entity.php'));
+
+        expect($generatedContent)
+            ->not->toContain('use Illuminate\Database\Eloquent\Concerns\HasUuids;')
+            ->not->toContain('use HasUuids;');
+    });
+
+    it('génère rapidement les modèles même avec un grand volume de tables (test de performance)', function () {
+        config(['crud-service-generator.models.whitelist' => []]);
+
+        // Simulation d'une base de données lourde avec 30 tables
+        $tables = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $tables[] = ['name' => "mock_table_{$i}"];
+        }
+
+        $this->partialMock(ModelService::class, function ($mock) use ($tables) {
+            $mock->shouldReceive('searchTable')->andReturn($tables);
+            $mock->shouldReceive('getTableColumns')->andReturn(['id', 'name', 'created_at', 'updated_at']);
+            $mock->shouldReceive('getPrimaryKey')->andReturn('id');
+            $mock->shouldReceive('getTableForeignKeys')->andReturn([]);
+        });
+
+        $startTime = microtime(true);
+
+        $this->artisan('generate:model')->assertExitCode(0);
+
+        $duration = microtime(true) - $startTime;
+
+        // Le temps d'exécution total pour 30 tables doit être inférieur à 0.5 seconde (garantissant l'absence de lenteur)
+        expect($duration)->toBeLessThan(0.5);
+    });
 });

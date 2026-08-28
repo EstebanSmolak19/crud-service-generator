@@ -77,12 +77,4 @@ trait HasCrudConfiguration
      * Nom de la vue SQL utilisée pour les listes et la récupération (Lecture seule).
      */
     protected ?string $sqlViewName = null;
-
-    /**
-     * Mapping des codes d'erreurs SQL vers des messages lisibles.
-     * Exemple : ['ERR_INSUFFICIENT_FUNDS' => 'Solde insuffisant.']
-     *
-     * @var array<string, string>
-     */
-    protected array $sqlErrorMappings = [];
 }
