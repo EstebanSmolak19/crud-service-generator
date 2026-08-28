@@ -39,21 +39,21 @@ describe('InitCommand', function () {
             ->expectsConfirmation('Est-ce que votre application utilise des UUIDs pour vos modèles/utilisateurs ?', 'no')
             ->assertExitCode(0);
 
-        //Vérification de la présence physique du fichier de configuration
+        // Vérification de la présence physique du fichier de configuration
         $configPath = config_path('crud-service-generator.php');
         expect(File::exists($configPath))->toBeTrue();
 
         $configContent = File::get($configPath);
         expect($configContent)->toContain("'use_uuids' => false");
 
-        //Vérification approfondie de la publication des migrations
+        // Vérification approfondie de la publication des migrations
         $migrationFiles = File::glob(database_path('migrations/*_create_crud_service_generator_table.php'));
 
         expect($migrationFiles)
             ->not->toBeEmpty()
             ->and(count($migrationFiles))->toBe(1);
 
-        //Vérification du contenu du fichier de migration publié
+        // Vérification du contenu du fichier de migration publié
         $migrationContent = File::get($migrationFiles[0]);
         expect($migrationContent)
             ->toContain('extends Migration')

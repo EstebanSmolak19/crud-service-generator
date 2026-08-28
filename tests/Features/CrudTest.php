@@ -1,18 +1,19 @@
 <?php
 
-use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\HasSqlOverrides;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ServiceAttributeContract;
+use EstebanSmolak19\CrudServiceGenerator\Services\CrudServiceBase;
 use EstebanSmolak19\CrudServiceGenerator\Services\ServiceProxy;
 use EstebanSmolak19\CrudServiceGenerator\Tests\TestCase;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(TestCase::class);
@@ -39,52 +40,87 @@ class BadService extends CrudServiceBase
 class StandardService extends CrudServiceBase
 {
     protected array $fillable = ['name', 'status'];
+
     protected string $ressource = TestResource::class;
+
     public bool $audit = false;
+
     public array $orderBy = ['name' => 'ASC'];
+
     public string $primaryKey = 'id';
 }
 
 class SqlService extends CrudServiceBase implements HasSqlOverrides
 {
     protected array $fillable = ['name'];
+
     protected string $ressource = TestResource::class;
+
     public string $primaryKey = 'id';
+
     public bool $audit = false;
 
     // Simulation des méthodes SQL
-    public function getSqlViewName(): ?string { return 'test_models'; }
-    public function getCreateProcedureName(): ?string { return 'create_proc'; }
-    public function getUpdateProcedureName(): ?string { return 'update_proc'; }
-    public function getDeleteProcedureName(): ?string { return 'delete_proc'; }
+    public function getSqlViewName(): ?string
+    {
+        return 'test_models';
+    }
 
-    public function viewExists(?string $view): bool { return true; }
-    public function procedureExists(?string $procedure): bool { return true; }
-    public function columnExists(string $table, string $column): bool { return true; }
+    public function getCreateProcedureName(): ?string
+    {
+        return 'create_proc';
+    }
 
-    public function executeCreateProcedure(string $proc, array $data): mixed {
+    public function getUpdateProcedureName(): ?string
+    {
+        return 'update_proc';
+    }
+
+    public function getDeleteProcedureName(): ?string
+    {
+        return 'delete_proc';
+    }
+
+    public function viewExists(?string $view): bool
+    {
+        return true;
+    }
+
+    public function procedureExists(?string $procedure): bool
+    {
+        return true;
+    }
+
+    public function columnExists(string $table, string $column): bool
+    {
+        return true;
+    }
+
+    public function executeCreateProcedure(string $proc, array $data): mixed
+    {
         return TestModel::create($data);
     }
-    public function executeUpdateProcedure(string $proc, mixed $id, array $data): void {
+
+    public function executeUpdateProcedure(string $proc, mixed $id, array $data): void
+    {
         TestModel::where('id', $id)->update($data);
     }
 }
 
-
-#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_CLASS)]
+#[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 class RequireAdmin implements ServiceAttributeContract
 {
     public function handle(object $service, string $method, array &$params): void
     {
         // On vérifie une fausse clé 'is_admin' dans les data pour le test
         $data = $params[0] ?? [];
-        if (!isset($data['is_admin']) || $data['is_admin'] !== true) {
+        if (! isset($data['is_admin']) || $data['is_admin'] !== true) {
             abort(403, 'Accès non autorisé');
         }
     }
 }
 
-#[\Attribute(\Attribute::TARGET_METHOD)]
+#[Attribute(Attribute::TARGET_METHOD)]
 class MutateData implements ServiceAttributeContract
 {
     public function handle(object $service, string $method, array &$params): void
@@ -145,12 +181,12 @@ beforeEach(function () {
 
 describe('Configuration et Initialisation', function () {
     it('déclenche une exception si fillable n est pas déclaré', function () {
-        expect(fn() => new BadService(new TestModel()))
+        expect(fn () => new BadService(new TestModel))
             ->toThrow(LogicException::class, "Tu as oublié de déclarer 'protected array \$fillable");
     });
 
     it('retourne correctement les propriétés de configuration', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
 
         expect($service->getResourceFields())->toBe(['name', 'status'])
             ->and($service->getRessource())->toBe(TestResource::class)
@@ -164,7 +200,7 @@ describe('Configuration et Initialisation', function () {
 
 describe('CRUD Standard (Eloquent) et Audit', function () {
     it('crée un enregistrement avec Eloquent (sans audit)', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $record = $service->create(['name' => 'Test Create']);
 
         expect($record->name)->toBe('Test Create')
@@ -172,7 +208,7 @@ describe('CRUD Standard (Eloquent) et Audit', function () {
     });
 
     it('crée un enregistrement et trace l audit', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
         $record = $service->create(['name' => 'Test Audit']);
@@ -185,7 +221,7 @@ describe('CRUD Standard (Eloquent) et Audit', function () {
 
     it('récupère tous les enregistrements (all)', function () {
         TestModel::create(['name' => 'Item 1']);
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
 
         $result = $service->all();
         expect($result)->toBeInstanceOf(EloquentBuilder::class)
@@ -194,7 +230,7 @@ describe('CRUD Standard (Eloquent) et Audit', function () {
 
     it('récupère un enregistrement (find)', function () {
         $model = TestModel::create(['name' => 'Find Me']);
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
 
         $result = $service->find($model->id);
         expect($result->id)->toBe($model->id);
@@ -202,7 +238,7 @@ describe('CRUD Standard (Eloquent) et Audit', function () {
 
     it('met à jour un enregistrement et trace l audit', function () {
         $model = TestModel::create(['name' => 'Old Name']);
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
         $service->update($model->id, ['name' => 'New Name']);
@@ -215,7 +251,7 @@ describe('CRUD Standard (Eloquent) et Audit', function () {
 
     it('supprime un enregistrement et trace l audit', function () {
         $model = TestModel::create(['name' => 'To Delete']);
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
         $service->destroy($model->id);
@@ -231,7 +267,7 @@ describe('Opérations en masse (Bulk)', function () {
         $m1 = TestModel::create(['name' => 'A']);
         $m2 = TestModel::create(['name' => 'B']);
 
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $count = $service->bulkUpdate([$m1->id, $m2->id], ['status' => 'inactive']);
 
         expect($count)->toBe(2)
@@ -242,7 +278,7 @@ describe('Opérations en masse (Bulk)', function () {
         $m1 = TestModel::create(['name' => 'A']);
         $m2 = TestModel::create(['name' => 'B']);
 
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $count = $service->bulkDelete([$m1->id, $m2->id]);
 
         expect($count)->toBe(2)
@@ -253,8 +289,8 @@ describe('Opérations en masse (Bulk)', function () {
         $m1 = TestModel::create(['name' => 'Bulk Update 1', 'status' => 'active']);
         $m2 = TestModel::create(['name' => 'Bulk Update 2', 'status' => 'active']);
 
-        //Initialisation du service avec l'audit activé
-        $service = new StandardService(new TestModel());
+        // Initialisation du service avec l'audit activé
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
         $count = $service->bulkUpdate([$m1->id, $m2->id], ['status' => 'inactive']);
@@ -262,7 +298,7 @@ describe('Opérations en masse (Bulk)', function () {
         expect($count)->toBe(2)
             ->and(TestModel::where('status', 'inactive')->count())->toBe(2); // Les éléments sont bien mis à jour
 
-        //Vérification cruciale : on s'assure qu'il y a bien 2 logs distincts de mise à jour
+        // Vérification cruciale : on s'assure qu'il y a bien 2 logs distincts de mise à jour
         $logsCount = DB::table('logs_table')->where('event', 'update')->count();
         expect($logsCount)->toBe(2);
     });
@@ -271,17 +307,17 @@ describe('Opérations en masse (Bulk)', function () {
         $m1 = TestModel::create(['name' => 'Bulk Delete 1']);
         $m2 = TestModel::create(['name' => 'Bulk Delete 2']);
 
-        //Initialisation du service avec l'audit activé
-        $service = new StandardService(new TestModel());
+        // Initialisation du service avec l'audit activé
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
-        //Exécution du bulkDelete
+        // Exécution du bulkDelete
         $count = $service->bulkDelete([$m1->id, $m2->id]);
 
         expect($count)->toBe(2)
             ->and(TestModel::count())->toBe(0); // Les éléments sont bien supprimés
 
-        //Vérification cruciale : on s'assure qu'il y a bien 2 logs distincts de suppression
+        // Vérification cruciale : on s'assure qu'il y a bien 2 logs distincts de suppression
         $logsCount = DB::table('logs_table')->where('event', 'delete')->count();
         expect($logsCount)->toBe(2);
     });
@@ -290,18 +326,18 @@ describe('Opérations en masse (Bulk)', function () {
 describe('Surcharges SQL (SQL Overrides)', function () {
     it('jette une exception si la clé primaire n existe pas dans la vue SQL', function () {
 
-        $service = \Mockery::mock(SqlService::class, [new TestModel()])->makePartial();
+        $service = Mockery::mock(SqlService::class, [new TestModel])->makePartial();
 
         $service->shouldReceive('columnExists')->andReturn(false);
         $service->shouldReceive('getSqlViewName')->andReturn('test_models');
         $service->shouldReceive('viewExists')->andReturn(true);
 
-        expect(fn() => $service->find(1))
-            ->toThrow(LogicException::class, "Structure SQL invalide");
+        expect(fn () => $service->find(1))
+            ->toThrow(LogicException::class, 'Structure SQL invalide');
     });
 
     it('transforme correctement un objet stdClass (issu d une requête brute) en Resource', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
 
         // On simule un retour de requête DB::table()
         $stdClassObject = (object) ['id' => 1, 'name' => 'Raw Object', 'status' => 'active'];
@@ -321,7 +357,7 @@ describe('Surcharges SQL (SQL Overrides)', function () {
 
     it('fait un abort 404 si l enregistrement est introuvable dans la vue SQL', function () {
         // test_models est vide en BDD à cet instant
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
 
         $hasException = false;
         try {
@@ -334,14 +370,14 @@ describe('Surcharges SQL (SQL Overrides)', function () {
     });
 
     it('utilise la vue SQL pour all()', function () {
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
         $result = $service->all();
         expect($result)->toBeInstanceOf(QueryBuilder::class);
     });
 
     it('utilise la vue SQL pour find() et formate en ressource', function () {
         $model = TestModel::create(['name' => 'SQL Find']);
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
 
         $result = $service->find($model->id);
         expect($result)->toBeInstanceOf(TestResource::class)
@@ -349,7 +385,7 @@ describe('Surcharges SQL (SQL Overrides)', function () {
     });
 
     it('utilise la procédure SQL pour create()', function () {
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
         $record = $service->create(['name' => 'SQL Create']);
 
         expect($record->name)->toBe('SQL Create');
@@ -357,7 +393,7 @@ describe('Surcharges SQL (SQL Overrides)', function () {
 
     it('utilise la procédure SQL pour update()', function () {
         $model = TestModel::create(['name' => 'Old SQL']);
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
 
         $service->update($model->id, ['name' => 'New SQL']);
 
@@ -366,13 +402,13 @@ describe('Surcharges SQL (SQL Overrides)', function () {
 
     it('utilise la procédure SQL brute pour destroy()', function () {
         $model = TestModel::create(['id' => 99, 'name' => 'SQL Delete']);
-        $service = new SqlService(new TestModel());
+        $service = new SqlService(new TestModel);
 
         $sqlExecuted = false;
 
         try {
             $service->destroy($model->id);
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'delete_proc')) {
                 $sqlExecuted = true;
             }
@@ -383,7 +419,7 @@ describe('Surcharges SQL (SQL Overrides)', function () {
 
     it('ne trace pas d audit si la mise à jour ne contient aucune modification réelle', function () {
         $model = TestModel::create(['name' => 'Identical Name']);
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->audit = true;
 
         // On update avec exactement la même valeur
@@ -397,7 +433,7 @@ describe('Surcharges SQL (SQL Overrides)', function () {
 
 describe('Proxy et Attributs de Permission', function () {
     it('bloque l appel à create() et renvoie une erreur 403 via l attribut de méthode', function () {
-        $service = new AttributeTestService(new TestModel());
+        $service = new AttributeTestService(new TestModel);
         $proxy = new ServiceProxy($service);
 
         $hasException = false;
@@ -413,7 +449,7 @@ describe('Proxy et Attributs de Permission', function () {
     });
 
     it('autorise l appel à create() si l attribut de méthode est satisfait', function () {
-        $service = new AttributeTestService(new TestModel());
+        $service = new AttributeTestService(new TestModel);
         $proxy = new ServiceProxy($service);
 
         // is_admin est true, on passe
@@ -424,7 +460,7 @@ describe('Proxy et Attributs de Permission', function () {
     });
 
     it('bloque l accès à TOUTES les méthodes si l attribut est défini sur la CLASSE', function () {
-        $service = new ClassLevelProtectedService(new TestModel());
+        $service = new ClassLevelProtectedService(new TestModel);
         $proxy = new ServiceProxy($service);
 
         $hasException = false;
@@ -439,7 +475,7 @@ describe('Proxy et Attributs de Permission', function () {
     });
 
     it('autorise l accès à une méthode quelconque si l attribut de classe est satisfait', function () {
-        $service = new ClassLevelProtectedService(new TestModel());
+        $service = new ClassLevelProtectedService(new TestModel);
         $proxy = new ServiceProxy($service);
 
         $proxy->create(['name' => 'Class Allowed', 'is_admin' => true]);
@@ -450,7 +486,7 @@ describe('Proxy et Attributs de Permission', function () {
     it('modifie les paramètres à la volée (par référence) avant d atteindre le service réel', function () {
         $model = TestModel::create(['name' => 'Old Name']);
 
-        $service = new AttributeTestService(new TestModel());
+        $service = new AttributeTestService(new TestModel);
         $proxy = new ServiceProxy($service);
 
         // MutateData intercepte l'appel et force 'name' = 'Mutated by Attribute'
@@ -463,7 +499,7 @@ describe('Proxy et Attributs de Permission', function () {
 describe('Application du Tri (applySorting)', function () {
 
     it('applique le tri standard en ASC', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->orderBy = ['name' => 'ASC'];
 
         $query = $service->applySorting(TestModel::query());
@@ -473,7 +509,7 @@ describe('Application du Tri (applySorting)', function () {
     });
 
     it('accepte les directions en minuscules et les applique correctement', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->orderBy = ['name' => 'asc'];
 
         $query = $service->applySorting(TestModel::query());
@@ -482,7 +518,7 @@ describe('Application du Tri (applySorting)', function () {
     });
 
     it('applique le tri en DESC', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->orderBy = ['id' => 'DESC'];
 
         $query = $service->applySorting(TestModel::query());
@@ -491,7 +527,7 @@ describe('Application du Tri (applySorting)', function () {
     });
 
     it('force le tri en DESC si la direction fournie est invalide (fallback de sécurité)', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         // On passe une direction qui n'existe pas en SQL
         $service->orderBy = ['status' => 'NIMPORTE_QUOI'];
 
@@ -503,10 +539,10 @@ describe('Application du Tri (applySorting)', function () {
     });
 
     it('applique le tri sur plusieurs colonnes consécutives', function () {
-        $service = new StandardService(new TestModel());
+        $service = new StandardService(new TestModel);
         $service->orderBy = [
             'status' => 'ASC',
-            'created_at' => 'DESC'
+            'created_at' => 'DESC',
         ];
 
         $query = $service->applySorting(TestModel::query());

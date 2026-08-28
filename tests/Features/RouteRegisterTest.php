@@ -6,18 +6,19 @@ use Illuminate\Support\Facades\File;
 
 uses(TestCase::class);
 
-function getTempRoutePath(): string {
-    return __DIR__ . '/temp_api.php';
+function getTempRoutePath(): string
+{
+    return __DIR__.'/temp_api.php';
 }
 
-function getMockState(): array {
+function getMockState(): array
+{
     return [
         'routeName' => 'UserProfile', // Devra être transformé en 'user-profiles'
         'controllerNamespace' => 'App\Http\Controllers\Api',
-        'controllerName' => 'UserProfileController'
+        'controllerName' => 'UserProfileController',
     ];
 }
-
 
 beforeEach(function () {
     if (File::exists(getTempRoutePath())) {
@@ -60,8 +61,8 @@ describe('Préparation et Vérification d\'existence', function () {
     it('prépare correctement le slug pluriel kebab-case et le FQN du contrôleur', function () {
         $register = new RouteRegister(getTempRoutePath());
         $register->prepare(getMockState())
-                 ->registerPublic()
-                 ->save();
+            ->registerPublic()
+            ->save();
 
         $content = File::get(getTempRoutePath());
 
@@ -134,7 +135,7 @@ describe('Injection des routes Protégées', function () {
 
         expect($content)->toContain("Route::middleware('auth:sanctum')->group(function () {")
             ->and($content)->toContain("    Route::serviceCrudResource('user-profiles', \App\Http\Controllers\Api\UserProfileController::class);")
-            ->and($content)->toContain("});");
+            ->and($content)->toContain('});');
     });
 });
 
@@ -144,8 +145,8 @@ describe('Chaînage (Conditionable)', function () {
         $register = new RouteRegister(getTempRoutePath());
 
         $result = $register->prepare(getMockState())
-                           ->when(true, fn($r) => $r->registerPublic())
-                           ->when(false, fn($r) => $r->registerProtected());
+            ->when(true, fn ($r) => $r->registerPublic())
+            ->when(false, fn ($r) => $r->registerProtected());
 
         expect($result)->toBeInstanceOf(RouteRegister::class);
 

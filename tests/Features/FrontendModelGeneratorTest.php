@@ -12,7 +12,7 @@ uses(TestCase::class);
 
 function getTestOutputDir(): string
 {
-    return __DIR__ . '/temp_ts_models';
+    return __DIR__.'/temp_ts_models';
 }
 
 function getServiceMock(): CommandService
@@ -29,13 +29,13 @@ function ensureStubExists(): void
 {
     // On utilise la réflexion pour trouver exactement où la classe cherche son stub
     $reflection = new ReflectionClass(FrontendModelGenerator::class);
-    $stubPath = dirname($reflection->getFileName()) . '/../stubs/frontend-model.stub';
+    $stubPath = dirname($reflection->getFileName()).'/../stubs/frontend-model.stub';
 
-    if (!is_dir(dirname($stubPath))) {
+    if (! is_dir(dirname($stubPath))) {
         mkdir(dirname($stubPath), 0777, true);
     }
 
-    if (!file_exists($stubPath)) {
+    if (! file_exists($stubPath)) {
         file_put_contents($stubPath, "{{imports}}\nexport type {{modelName}} {\n{{properties}}\n}\n");
     }
 }
@@ -56,7 +56,6 @@ afterEach(function () {
     }
 });
 
-
 describe('Génération de base (avec schéma fourni manuellement)', function () {
 
     it('génère un fichier TS valide avec des propriétés simples', function () {
@@ -69,7 +68,7 @@ describe('Génération de base (avec schéma fourni manuellement)', function () 
 
         $generator->generate('User', $schema);
 
-        $filePath = getTestOutputDir() . '/User.ts';
+        $filePath = getTestOutputDir().'/User.ts';
         expect(File::exists($filePath))->toBeTrue();
 
         $content = File::get($filePath);
@@ -85,7 +84,7 @@ describe('Génération de base (avec schéma fourni manuellement)', function () 
 
         $generator->generate('EmptyModel', []);
 
-        expect(File::exists(getTestOutputDir() . '/EmptyModel.ts'))->toBeFalse();
+        expect(File::exists(getTestOutputDir().'/EmptyModel.ts'))->toBeFalse();
     });
 
     it('évite les boucles infinies grâce au cache des modèles générés', function () {
@@ -98,7 +97,7 @@ describe('Génération de base (avec schéma fourni manuellement)', function () 
         $generator->generate('CachedModel', $schema);
 
         // Si ça passe sans erreur, c'est que la condition `in_array($modelName, $this->generatedCache)` a bien fonctionné.
-        expect(File::exists(getTestOutputDir() . '/CachedModel.ts'))->toBeTrue();
+        expect(File::exists(getTestOutputDir().'/CachedModel.ts'))->toBeTrue();
     });
 });
 
@@ -115,7 +114,7 @@ describe('Résolution des types TypeScript et Imports', function () {
         ];
 
         $generator->generate('TypeModel', $schema);
-        $content = File::get(getTestOutputDir() . '/TypeModel.ts');
+        $content = File::get(getTestOutputDir().'/TypeModel.ts');
 
         expect($content)->toContain('id: number;')
             ->and($content)->toContain('price: number;')
@@ -132,12 +131,12 @@ describe('Résolution des types TypeScript et Imports', function () {
         ];
 
         $generator->generate('ImportModel', $schema);
-        $content = File::get(getTestOutputDir() . '/ImportModel.ts');
+        $content = File::get(getTestOutputDir().'/ImportModel.ts');
 
         // Doit importer 'Role'
         expect($content)->toContain("import { Role } from './Role';")
         // Mais ne doit PAS importer 'ImportModel' dans lui-même
-            ->and($content)->not->toContain("import { ImportModel }");
+            ->and($content)->not->toContain('import { ImportModel }');
     });
 
     it('formate correctement les types de relations (Tableau vs Objet)', function () {
@@ -149,7 +148,7 @@ describe('Résolution des types TypeScript et Imports', function () {
         ];
 
         $generator->generate('RelationModel', $schema);
-        $content = File::get(getTestOutputDir() . '/RelationModel.ts');
+        $content = File::get(getTestOutputDir().'/RelationModel.ts');
 
         // belongsTo = Objet | null
         expect($content)->toContain('author: User | null;')
@@ -187,14 +186,14 @@ describe('Introspection de la Base de Données (Schema Extraction)', function ()
         // La table "ghosts" n'existe pas
         $generator->generate('Ghost');
 
-        expect(File::exists(getTestOutputDir() . '/Ghost.ts'))->toBeFalse();
+        expect(File::exists(getTestOutputDir().'/Ghost.ts'))->toBeFalse();
     });
 
     it('extrait les colonnes scalaires avec les bons types', function () {
         $generator = new FrontendModelGenerator(getServiceMock());
 
         $generator->generate('User'); // Va introspecter la table 'users'
-        $content = File::get(getTestOutputDir() . '/User.ts');
+        $content = File::get(getTestOutputDir().'/User.ts');
 
         // id -> integer -> number
         expect($content)->toContain('id: number;')
@@ -206,7 +205,7 @@ describe('Introspection de la Base de Données (Schema Extraction)', function ()
         $generator = new FrontendModelGenerator(getServiceMock());
 
         $generator->generate('Post'); // Va introspecter la table 'posts'
-        $content = File::get(getTestOutputDir() . '/Post.ts');
+        $content = File::get(getTestOutputDir().'/Post.ts');
 
         // posts a un user_id FK vers users -> génère relation 'user'
         expect($content)->toContain('user?: User | null;')
@@ -217,7 +216,7 @@ describe('Introspection de la Base de Données (Schema Extraction)', function ()
         $generator = new FrontendModelGenerator(getServiceMock());
 
         $generator->generate('User'); // Va introspecter la table 'users'
-        $content = File::get(getTestOutputDir() . '/User.ts');
+        $content = File::get(getTestOutputDir().'/User.ts');
 
         // users est ciblé par posts (user_id) -> génère relation 'posts'
         expect($content)->toContain('posts: Post[];')
@@ -235,7 +234,7 @@ describe('Introspection de la Base de Données (Schema Extraction)', function ()
         // Le générateur doit détecter que User.ts n'existe pas et le créer !
         $generator->generate('Post');
 
-        expect(File::exists(getTestOutputDir() . '/Post.ts'))->toBeTrue()
-            ->and(File::exists(getTestOutputDir() . '/User.ts'))->toBeTrue(); // Le modèle lié a été généré !
+        expect(File::exists(getTestOutputDir().'/Post.ts'))->toBeTrue()
+            ->and(File::exists(getTestOutputDir().'/User.ts'))->toBeTrue(); // Le modèle lié a été généré !
     });
 });

@@ -14,10 +14,11 @@ uses(TestCase::class);
 class FormatterTestModel extends Model
 {
     protected $table = 'formatter_models';
+
     protected $guarded = [];
+
     public $timestamps = false;
 }
-
 
 beforeEach(function () {
     Schema::dropIfExists('formatter_models');
@@ -31,11 +32,10 @@ beforeEach(function () {
     }
 });
 
-
 describe('Formatage des types scalaires, null et objets simples', function () {
 
     it('formate une valeur scalaire (entier, booléen, chaine)', function () {
-        $mapper = fn($item) => $item; // Le mapper ne sera pas utilisé pour les scalaires
+        $mapper = fn ($item) => $item; // Le mapper ne sera pas utilisé pour les scalaires
 
         expect((new ResponseFormatter(42, $mapper, 15))->format())->toBe(['affected_rows' => 42]);
         expect((new ResponseFormatter(true, $mapper, 15))->format())->toBe(['affected_rows' => true]);
@@ -43,14 +43,14 @@ describe('Formatage des types scalaires, null et objets simples', function () {
     });
 
     it('formate une valeur null', function () {
-        $mapper = fn($item) => $item;
+        $mapper = fn ($item) => $item;
 
         expect((new ResponseFormatter(null, $mapper, 15))->format())->toBe(['affected_rows' => null]);
     });
 
     it('formate un objet unique (stdClass ou Model) en appliquant le mapper', function () {
         $item = (object) ['name' => 'John Doe'];
-        $mapper = fn($obj) => ['mapped_name' => strtoupper($obj->name)];
+        $mapper = fn ($obj) => ['mapped_name' => strtoupper($obj->name)];
 
         $result = (new ResponseFormatter($item, $mapper, 15))->format();
 
@@ -63,9 +63,9 @@ describe('Formatage des Collections et Paginators existants', function () {
     it('formate une SupportCollection en appliquant le mapper sur chaque élément', function () {
         $collection = collect([
             (object) ['id' => 1],
-            (object) ['id' => 2]
+            (object) ['id' => 2],
         ]);
-        $mapper = fn($item) => $item->id * 10;
+        $mapper = fn ($item) => $item->id * 10;
 
         $result = (new ResponseFormatter($collection, $mapper, 15))->format();
 
@@ -74,8 +74,8 @@ describe('Formatage des Collections et Paginators existants', function () {
     });
 
     it('formate un LengthAwarePaginator en appliquant le mapper sur sa collection interne', function () {
-        $paginator = new LengthAwarePaginator(collect([(object)['id' => 1]]), 1, 15);
-        $mapper = fn($item) => ['new_id' => $item->id];
+        $paginator = new LengthAwarePaginator(collect([(object) ['id' => 1]]), 1, 15);
+        $mapper = fn ($item) => ['new_id' => $item->id];
 
         $result = (new ResponseFormatter($paginator, $mapper, 15))->format();
 
@@ -88,7 +88,7 @@ describe('Résolution automatique des requêtes (Builders)', function () {
 
     it('résout un Eloquent Builder avec pagination (perPage > 0)', function () {
         $query = FormatterTestModel::query();
-        $mapper = fn($item) => ['mapped' => $item->name];
+        $mapper = fn ($item) => ['mapped' => $item->name];
 
         $formatter = new ResponseFormatter($query, $mapper, 2); // 2 éléments par page
         $result = $formatter->format();
@@ -101,7 +101,7 @@ describe('Résolution automatique des requêtes (Builders)', function () {
 
     it('résout un Eloquent Builder avec un simple get() (perPage = 0)', function () {
         $query = FormatterTestModel::query();
-        $mapper = fn($item) => ['mapped' => $item->name];
+        $mapper = fn ($item) => ['mapped' => $item->name];
 
         $formatter = new ResponseFormatter($query, $mapper, 0); // 0 = pas de pagination
         $result = $formatter->format();
@@ -112,7 +112,7 @@ describe('Résolution automatique des requêtes (Builders)', function () {
 
     it('résout un DB QueryBuilder brut avec pagination', function () {
         $query = DB::table('formatter_models');
-        $mapper = fn($item) => ['mapped_id' => $item->id];
+        $mapper = fn ($item) => ['mapped_id' => $item->id];
 
         $formatter = new ResponseFormatter($query, $mapper, 3);
         $result = $formatter->format();
@@ -130,7 +130,7 @@ describe('Sécurités et configurations', function () {
         config(['crud-service-generator.pagination.max_per_page' => 2]);
 
         $query = FormatterTestModel::query();
-        $mapper = fn($item) => $item;
+        $mapper = fn ($item) => $item;
 
         // On demande 100 éléments par page (doit être bridé à 2)
         $formatter = new ResponseFormatter($query, $mapper, 100);

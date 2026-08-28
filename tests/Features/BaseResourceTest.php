@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 uses(TestCase::class);
 
-
 class ResourceTestModel extends Model
 {
     protected $guarded = [];
@@ -20,7 +19,6 @@ class ResourceTestModel extends Model
         $this->setRawAttributes($attributes, true);
     }
 }
-
 
 describe('Logique standard (Fillable)', function () {
 
@@ -36,13 +34,13 @@ describe('Logique standard (Fillable)', function () {
         $resource = new BaseResource($model, ['id', 'name']);
 
         // On passe directement une nouvelle Request ici
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe([
             'id' => 1,
             'name' => 'John Doe',
         ])->not->toHaveKey('email')
-          ->not->toHaveKey('password');
+            ->not->toHaveKey('password');
     });
 
     it('retourne null pour les colonnes demandées dans $fillable mais absentes du modèle', function () {
@@ -51,7 +49,7 @@ describe('Logique standard (Fillable)', function () {
         ]);
 
         $resource = new BaseResource($model, ['name', 'age']);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe([
             'name' => 'John Doe',
@@ -68,7 +66,7 @@ describe('Logique standard (Fillable)', function () {
         $model = new ResourceTestModel($attributes);
 
         $resource = new BaseResource($model, []);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe($attributes);
     });
@@ -78,7 +76,7 @@ describe('Logique standard (Fillable)', function () {
         $model = new ResourceTestModel($attributes);
 
         $resource = new BaseResource($model, ['']);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         // Doit renvoyer tous les attributs transformés par défaut par JsonResource
         expect($result)->toMatchArray($attributes);
@@ -87,12 +85,12 @@ describe('Logique standard (Fillable)', function () {
     it('récupère correctement les attributs depuis un objet standard (stdClass)', function () {
         $obj = (object) [
             'id' => 42,
-            'name' => 'Test Object'
+            'name' => 'Test Object',
         ];
 
         // Sans $fillable, il doit utiliser un cast (array) en fallback car getAttributes() n'existe pas sur stdClass
         $resource = new BaseResource($obj, []);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe(['id' => 42, 'name' => 'Test Object']);
     });
@@ -112,7 +110,7 @@ describe('Logique Vue SQL (fromSqlView = true)', function () {
 
         // Même si on donne un $fillable restrictif, il doit être ignoré
         $resource = new BaseResource($model, ['id']);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe([
             'id' => 5,
@@ -129,7 +127,7 @@ describe('Logique Vue SQL (fromSqlView = true)', function () {
         ];
 
         $resource = new BaseResource($obj, ['id']);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe([
             'id' => 12,
@@ -149,9 +147,9 @@ describe('Logique Vue SQL (fromSqlView = true)', function () {
         $obj = (object) $arrayData;
 
         $resource = new BaseResource($obj);
-        $result = $resource->toArray(new Request());
+        $result = $resource->toArray(new Request);
 
         expect($result)->toBe(['id' => 77])
-          ->not->toHaveKey('fromSqlView');
+            ->not->toHaveKey('fromSqlView');
     });
 });
