@@ -117,7 +117,7 @@ return [
         'unauthorized_detail' => 'Authentification requise pour accéder à la méthode : :method',
     ],
 
-   /*
+    /*
     |--------------------------------------------------------------------------
     | Frontend Model Generator
     |--------------------------------------------------------------------------
