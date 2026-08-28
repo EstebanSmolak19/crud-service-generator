@@ -4,6 +4,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | UUIDs Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Cette section gère le format des identifiants utilisés pour la traçabilité
+    | et les tables de logs du package.
+    |
+    | 'use_uuids' : Définissez à true si vos modèles utilisent des UUIDs
+    |               au lieu d'entiers auto-incrémentés, afin d'adapter automatiquement
+    |               les colonnes morphiques et les relations de logs.
+    |
+    */
+
+    'use_uuids' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Service Path
     |--------------------------------------------------------------------------
     |
@@ -102,5 +118,22 @@ return [
     'messages' => [
         'unauthorized' => 'Non autorisé.',
         'unauthorized_detail' => 'Authentification requise pour accéder à la méthode : :method',
+    ],
+
+   /*
+    |--------------------------------------------------------------------------
+    | Frontend Model Generator
+    |--------------------------------------------------------------------------
+    |
+    | Cette section gère la configuration pour la génération automatique
+    | des interfaces TypeScript destinées au frontend (React, Vue, Inertia, etc.).
+    |
+    | 'path' : Définit le chemin absolu ou relatif où le fichier .ts
+    |          du modèle sera généré dans l'application.
+    |
+    */
+
+    'frontend' => [
+        'path' => base_path('resources/js/types'),
     ],
 ];

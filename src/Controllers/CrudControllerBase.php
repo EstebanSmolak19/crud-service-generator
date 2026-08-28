@@ -43,19 +43,19 @@ class CrudControllerBase extends Controller
         return response()->json($data, 201);
     }
 
-    public function show(int $id)
+    public function show(string|int $id)
     {
         return response()->json($this->service->find($id));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string|int $id)
     {
         $data = $this->service->update($id, $request->all());
 
         return response()->json($data);
     }
 
-    public function destroy(int $id)
+    public function destroy(string|int $id)
     {
         $this->service->destroy($id);
 

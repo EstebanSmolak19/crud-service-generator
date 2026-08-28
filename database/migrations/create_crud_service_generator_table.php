@@ -10,15 +10,25 @@ return new class extends Migration
     {
         Schema::create(config('crud-service-generator.database.table_name_log'), function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+
+            if (config('crud-service-generator.use_uuids', false)) {
+                $table->foreignUuid('user_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->uuidMorphs('auditable');
+            } else {
+                $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+                $table->morphs('auditable');
+            }
+
             $table->string('event');
-
-            $table->morphs('auditable');
-
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
 
             $table->timestamps();
         });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists(config('crud-service-generator.database.table_name_log'));
     }
 };

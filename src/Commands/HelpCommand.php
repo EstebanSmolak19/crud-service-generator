@@ -2,7 +2,6 @@
 
 namespace EstebanSmolak19\CrudServiceGenerator\Commands;
 
-use EstebanSmolak19\CrudServiceGenerator\Contracts\IModelService;
 use Illuminate\Console\Command;
 
 class HelpCommand extends Command
@@ -10,11 +9,6 @@ class HelpCommand extends Command
     public $signature = 'p:help';
 
     public $description = 'Affiche le guide complet d\'utilisation du package';
-
-    public function __construct(private IModelService $service)
-    {
-        return parent::__construct();
-    }
 
     public function handle(): int
     {
@@ -25,23 +19,23 @@ class HelpCommand extends Command
 
     public function helpOption(Command $command): void
     {
-        // Titre stylisé
         $command->line('');
         $command->line('<fg=white;bg=blue;options=bold>  🚀 CRUD SERVICE GENERATOR - DOCUMENTATION  </>');
         $command->line('');
 
-        // Usage de base, les commandes
-        $command->comment('Usage:');
-        $command->line('  <info>php artisan make:service {Name}</info> [options?]');
-        $command->line('  <info>php artisan generate:model</info>   Synchronise tous les modèles avec la BDD.');
-        $command->line('  <info>php artisan config:apply</info>     Applique les réglages du fichier de configurations');
+        $command->comment('Commandes disponibles :');
+        $command->line('  <info>php artisan make:service {name?}</info>    Génère un service via un menu interactif');
+        $command->line('  <info>php artisan make:attribute</info>     Crée un attribut de service personnalisé');
+        $command->line('  <info>php artisan generate:model</info>     Synchronise tous les modèles avec la BDD');
+        $command->line('  <info>php artisan front:model {model}</info>  Génère l\'interface TypeScript pour le front');
+        $command->line('  <info>php artisan config:apply</info>       Applique le fichier de configuration');
         $command->line('');
 
-        // Les options
-        $command->comment('Listes des options');
-        $command->line("  <info>--crud</info>            Génère le <comment>Modèle s'il n'existe pas</comment> ainsi que le Service qui étant d'un <comment>CRUD Service</comment>");
-        $command->line('  <info>--controller</info>      Ajoute le <comment>Controller API</comment> et associe le service au controller'); // A faire
-        $command->line('  <info>--all</info>             Le pack complet : CRUD + Controller + Routes CRUD.');
+        $command->comment('Modes interactifs (pour make:service) :');
+        $command->line('  <info>service</info>      Génère uniquement la classe de service');
+        $command->line('  <info>controllers</info>  Génère le service et son contrôleur API');
+        $command->line('  <info>CRUD</info>         Génère le service, le modèle et les méthodes CRUD');
+        $command->line('  <info>tous</info>         Le pack complet : Service, Modèle, Contrôleur et Routes');
         $command->line('');
 
         $command->line('------------------------------------------------------------------');

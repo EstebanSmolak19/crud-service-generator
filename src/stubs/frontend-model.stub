@@ -1,0 +1,5 @@
+{{imports}}
+
+export type {{modelName}} = {
+{{properties}}
+}

@@ -5,6 +5,7 @@ namespace EstebanSmolak19\CrudServiceGenerator;
 use EstebanSmolak19\CrudServiceGenerator\Commands\ApplyConfigCommand;
 use EstebanSmolak19\CrudServiceGenerator\Commands\AttributeCommand;
 use EstebanSmolak19\CrudServiceGenerator\Commands\CrudServiceGeneratorCommand;
+use EstebanSmolak19\CrudServiceGenerator\Commands\GeneratedFrontendModel;
 use EstebanSmolak19\CrudServiceGenerator\Commands\GenerateModel;
 use EstebanSmolak19\CrudServiceGenerator\Commands\HelpCommand;
 use EstebanSmolak19\CrudServiceGenerator\Contracts\ICommandService;
@@ -30,6 +31,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
                 ApplyConfigCommand::class,
                 HelpCommand::class,
                 AttributeCommand::class,
+                GeneratedFrontendModel::class
             ]);
     }
 
