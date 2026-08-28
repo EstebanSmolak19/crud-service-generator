@@ -15,8 +15,8 @@ class ModelService implements IModelService
      */
     private array $schemaCache = [
         'foreignKeys' => [],
-        'columns'     => [],
-        'indexes'     => [],
+        'columns' => [],
+        'indexes' => [],
     ];
 
     /**
@@ -79,7 +79,6 @@ class ModelService implements IModelService
 
     }
 
-
     /**
      * S'assure que les répertoires de destination pour les modèles existent.
      */
@@ -131,18 +130,18 @@ class ModelService implements IModelService
 
         if (config('crud-service-generator.use_uuids', false)) {
             $imports[] = "use Illuminate\Database\Eloquent\Concerns\HasUuids;";
-            $traits[] = "use HasUuids;";
+            $traits[] = 'use HasUuids;';
         }
 
         $relations = $this->generateAllRelations($tableName, $allTables, $imports);
-        $traitsString = !empty($traits) ? "\n    " . implode("\n    ", $traits) . "\n" : '';
+        $traitsString = ! empty($traits) ? "\n    ".implode("\n    ", $traits)."\n" : '';
 
         return [
             'primaryKeyLine' => ($primaryKey !== 'id') ? "\n    protected \$primaryKey = '{$primaryKey}';" : '',
             'fillableString' => "\n        '".implode("',\n        '", $fillableColumns)."',\n    ",
-            'useString'      => implode("\n", array_unique($imports)),
-            'traits'         => $traitsString,
-            'relations'      => $relations,
+            'useString' => implode("\n", array_unique($imports)),
+            'traits' => $traitsString,
+            'relations' => $relations,
         ];
     }
 

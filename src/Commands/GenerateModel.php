@@ -20,6 +20,7 @@ class GenerateModel extends Command
     {
         $this->components->task('Génération des modèles et des relations', function () {
             $this->service->generateModels();
+
             return true;
         });
 
