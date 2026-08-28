@@ -41,9 +41,4 @@ interface IModelService
      * @return string la clef primaire
      */
     public function getPrimaryKey(string $table): string;
-
-    /**
-     * Masque le dossier Base dans VS Code pour ne pas polluer l'explorateur
-     */
-    public function hideBaseModelsInVsCode(): void;
 }

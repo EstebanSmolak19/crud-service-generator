@@ -151,18 +151,4 @@ describe('ModelService', function () {
 
         expect(File::get(app_path('Models/GenericModel.php')))->toContain('// CLASS CUSTOM');
     });
-
-    it('gère l\'exclusion de la configuration VSCode', function () {
-        config(['crud-service-generator.models.hide_base_models_in_vscode' => true]);
-
-        $this->partialMock(ModelService::class, function ($mock) {
-            $mock->shouldReceive('searchTable')->andReturn([]);
-        });
-
-        $this->artisan('generate:model')->assertExitCode(0);
-
-        $settings = json_decode(File::get(base_path('.vscode/settings.json')), true);
-
-        expect($settings['files.exclude']['app/Models/Base'])->toBeTrue();
-    });
 });

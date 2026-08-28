@@ -28,18 +28,4 @@ class {{ class }} extends CrudServiceBase implements IFillableContract, HasSqlOv
         // On instancie le modèle et on le passe à la classe parente
         parent::__construct($model);
     }
-
-    /**
-     * Gestion des permissions par méthode du service CRUD.
-     * Déclarez ici quel attribut doit s'exécuter pour chaque action.
-    */
-    public function permissions(): array
-    {
-        return [
-            // 'all'     => [], // Tout le monde peut voir
-            'create'  => [IsAuthenticated::class], // Connecté requis pour créer
-            'update'  => [IsAuthenticated::class], // Connecté requis pour modifier
-            'destroy' => [IsAuthenticated::class], // Connecté requis pour supprimer
-        ];
-    }
 }

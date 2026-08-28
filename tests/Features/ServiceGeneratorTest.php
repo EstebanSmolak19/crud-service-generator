@@ -174,7 +174,7 @@ describe('Génération Complète (--all / tous)', function () {
         $routeContent = File::get(base_path('routes/service_generator.php'));
         expect($routeContent)
             ->toContain("Route::middleware([ForceJsonResponse::class, 'auth:sanctum'])->group(")
-            ->toContain("Route::apiResource('posts', \App\Http\Controllers\PostController::class);");
+            ->toContain("Route::serviceCrudResource('posts', \App\Http\Controllers\PostController::class);");
     });
 
     it("génère l'ensemble des composants avec la route publique", function () {
@@ -191,7 +191,7 @@ describe('Génération Complète (--all / tous)', function () {
 
         // On vérifie que la route a été placée dans les routes publiques, sans l'indentation du middleware
         expect($routeContent)
-            ->toContain("Route::apiResource('public-routes', \App\Http\Controllers\PublicController::class);") // Pluralisé automatiquement
+            ->toContain("Route::serviceCrudResource('public-routes', \App\Http\Controllers\PublicController::class);") // Pluralisé automatiquement
             ->toContain('// <public_routes>');
     });
 
@@ -202,7 +202,7 @@ describe('Génération Complète (--all / tous)', function () {
         $initialContent = <<<PHP
         <?php
         // <public_routes>
-        Route::apiResource('existings', \App\Http\Controllers\ExistingController::class);
+        Route::serviceCrudResource('existings', \App\Http\Controllers\ExistingController::class);
         PHP;
         File::put(base_path('routes/service_generator.php'), $initialContent);
 
@@ -216,7 +216,7 @@ describe('Génération Complète (--all / tous)', function () {
 
         $content = File::get(base_path('routes/service_generator.php'));
 
-        expect($content)->toContain("Route::apiResource('existings'");
-        expect($content)->toContain("Route::apiResource('firsts', \App\Http\Controllers\FirstController::class);");
+        expect($content)->toContain("Route::serviceCrudResource('existings'");
+        expect($content)->toContain("Route::serviceCrudResource('firsts', \App\Http\Controllers\FirstController::class);");
     });
 });

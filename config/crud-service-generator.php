@@ -69,9 +69,6 @@ return [
         'excluded_columns' => [
             'id', 'password', 'remember_token', 'created_at', 'updated_at', 'deleted_at',
         ],
-
-        // Permet de cacher le dossier 'app/Models/Base' dans l'éditeur VSCode.
-        'hide_base_models_in_vscode' => true,
     ],
 
     /*

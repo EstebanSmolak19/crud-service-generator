@@ -19,10 +19,9 @@ class ServiceProxy
 
     public function __call($name, $arguments)
     {
-        // Analyse du service via Reflection
         $reflection = new ReflectionClass($this->service);
 
-        // Récupération des attributs physiques (Classe + Méthode via #[...])
+        // Récupération unique des attributs natifs (Classe + Méthode via #[...])
         $attributes = array_merge(
             $reflection->getAttributes(ServiceAttributeContract::class, \ReflectionAttribute::IS_INSTANCEOF),
             $reflection->hasMethod($name)
@@ -30,34 +29,16 @@ class ServiceProxy
                 : []
         );
 
-        // Récupération des attributs déclarés dans la méthode permissions() du service
-        if (method_exists($this->service, 'permissions')) {
-            $declaredPermissions = $this->service->permissions();
-
-            if (isset($declaredPermissions[$name])) {
-                foreach ((array) $declaredPermissions[$name] as $attrClass) {
-                    if (class_exists($attrClass)) {
-                        $instance = new $attrClass;
-                        if ($instance instanceof ServiceAttributeContract) {
-                            // Exécution de la logique de l'attribut déclaré
-                            $instance->handle($this->service, $name, $arguments);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Exécution de la logique des attributs physiques (newInstance())
+        // Exécution de la logique des attributs
         foreach ($attributes as $attribute) {
             $instance = $attribute->newInstance();
-            // Si handle() jette une exception ou fait un abort(), le code s'arrête ici.
             $instance->handle($this->service, $name, $arguments);
         }
 
-        // Appel de la méthode réelle
+        // Appel de la méthode réelle du service
         $result = call_user_func_array([$this->service, $name], $arguments);
 
-        // Formatage de sortie
+        // Formatage de sortie et tri
         if ($result instanceof Builder || $result instanceof QueryBuilder) {
             $result = $this->service->applySorting($result);
         }

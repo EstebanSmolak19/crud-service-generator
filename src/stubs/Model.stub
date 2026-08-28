@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class {{ class }} extends Model
 {
+    {{ traits }}
     protected $table = '{{ table }}';
     {{ primaryKey }}
 
     protected $fillable = [{{ fillable }}];
-
     {{ relations }}
 }

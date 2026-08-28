@@ -18,7 +18,13 @@ class GenerateModel extends Command
 
     public function handle(): int
     {
-        $this->service->generateModels();
+        $this->components->task('Génération des modèles et des relations', function () {
+            $this->service->generateModels();
+            return true;
+        });
+
+        $this->newLine();
+        $this->components->info('🎉 Tous les modèles ont été générés et synchronisés avec succès !');
 
         return Command::SUCCESS;
     }

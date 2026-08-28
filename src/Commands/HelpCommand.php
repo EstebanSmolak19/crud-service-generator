@@ -28,7 +28,6 @@ class HelpCommand extends Command
         $command->line('  <info>php artisan make:attribute</info>     Crée un attribut de service personnalisé');
         $command->line('  <info>php artisan generate:model</info>     Synchronise tous les modèles avec la BDD');
         $command->line('  <info>php artisan front:model {model}</info>  Génère l\'interface TypeScript pour le front');
-        $command->line('  <info>php artisan config:apply</info>       Applique le fichier de configuration');
         $command->line('');
 
         $command->comment('Modes interactifs (pour make:service) :');
