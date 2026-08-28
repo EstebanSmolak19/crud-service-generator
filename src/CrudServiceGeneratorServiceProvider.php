@@ -31,7 +31,7 @@ class CrudServiceGeneratorServiceProvider extends PackageServiceProvider
                 ApplyConfigCommand::class,
                 HelpCommand::class,
                 AttributeCommand::class,
-                GeneratedFrontendModel::class
+                GeneratedFrontendModel::class,
             ]);
     }
 

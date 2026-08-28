@@ -19,7 +19,7 @@ class GeneratedFrontendModel extends Command
 
         $frontendGenerator->generate($modelName);
 
-        $this->info("Fichier TypeScript généré avec succès !");
+        $this->info('Fichier TypeScript généré avec succès !');
 
         return Command::SUCCESS;
     }
